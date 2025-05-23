@@ -85,7 +85,7 @@ const AuthPage = () => {
       <Card className="w-full max-w-md border-0 shadow-2xl bg-white/90 backdrop-blur">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            Welcome to SkinCare AI
+            Welcome to Skinetic
           </CardTitle>
           <CardDescription>
             Sign in to your account or create a new one

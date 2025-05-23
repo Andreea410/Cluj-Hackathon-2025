@@ -125,7 +125,7 @@ const PricingPlans = () => {
       <div className="mt-16 text-center">
         <div className="bg-white/80 backdrop-blur rounded-2xl p-8 shadow-lg max-w-2xl mx-auto">
           <Shield className="w-12 h-12 text-purple-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-4">Why Choose SkinCare AI?</h3>
+          <h3 className="text-xl font-semibold mb-4">Why Choose Skinetic?</h3>
           <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4 text-green-500" />
