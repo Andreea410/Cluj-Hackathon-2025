@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,17 +12,30 @@ import PricingPlans from '@/components/PricingPlans';
 const Index = () => {
   const [currentStep, setCurrentStep] = useState('welcome');
   const [userProfile, setUserProfile] = useState(null);
-  const [skinAnalysis, setSkinAnalysis] = useState(null);
+  const [skinAnalysis, setSkinAnalysis] = useState({
+    skinType: 'normal',
+    concerns: [],
+    sensitivity: 'low'
+  });
   const [points, setPoints] = useState(0);
 
   const handleRegistration = (profile) => {
     setUserProfile(profile);
-    setCurrentStep('skinAnalysis');
+    if (profile.isExistingUser) {
+      setSkinAnalysis({
+        skinType: 'combination',
+        concerns: ['acne', 'aging'],
+        sensitivity: 'moderate'
+      });
+      setCurrentStep('routine');
+    } else {
+      setCurrentStep('skinAnalysis');
+    }
   };
 
   const handleSkinAnalysis = (analysis) => {
     setSkinAnalysis(analysis);
-    setCurrentStep('recommendations');
+    setCurrentStep('routine');
   };
 
   const renderCurrentStep = () => {
@@ -32,14 +44,20 @@ const Index = () => {
         return <RegistrationForm onComplete={handleRegistration} />;
       case 'skinAnalysis':
         return <SkinAnalysisQuiz onComplete={handleSkinAnalysis} />;
-      case 'recommendations':
-        return <ProductRecommendations skinAnalysis={skinAnalysis} onContinue={() => setCurrentStep('routine')} />;
       case 'routine':
-        return <RoutineTracker points={points} setPoints={setPoints} />;
+        return <RoutineTracker 
+          points={points} 
+          setPoints={setPoints} 
+          skinAnalysis={skinAnalysis} 
+          userProfile={userProfile}
+        />;
       case 'pricing':
         return <PricingPlans />;
       default:
-        return <WelcomeSection onGetStarted={() => setCurrentStep('registration')} onViewPricing={() => setCurrentStep('pricing')} />;
+        return <WelcomeSection 
+          onGetStarted={() => setCurrentStep('registration')} 
+          onViewPricing={() => setCurrentStep('pricing')} 
+        />;
     }
   };
 

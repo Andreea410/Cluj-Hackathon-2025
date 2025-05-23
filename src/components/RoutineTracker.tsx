@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,9 +7,25 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sun, Moon, Gift, Camera, Calendar } from 'lucide-react';
 
-const RoutineTracker = ({ points, setPoints }) => {
-  const [morningCompleted, setMorningCompleted] = useState([]);
-  const [nightCompleted, setNightCompleted] = useState([]);
+interface RoutineTrackerProps {
+  points: number;
+  setPoints: (points: number) => void;
+  skinAnalysis: {
+    skinType: string;
+    concerns: string[];
+    sensitivity: string;
+  };
+  userProfile: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    isExistingUser?: boolean;
+  };
+}
+
+const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: RoutineTrackerProps) => {
+  const [morningCompleted, setMorningCompleted] = useState<number[]>([]);
+  const [nightCompleted, setNightCompleted] = useState<number[]>([]);
   const [showReward, setShowReward] = useState(false);
 
   const morningRoutine = [
@@ -22,21 +37,25 @@ const RoutineTracker = ({ points, setPoints }) => {
 
   const nightRoutine = [
     { id: 5, step: 'Gentle Cleanser', time: '30 seconds' },
-    { id: 6, step: 'Salicylic Acid Treatment', time: '1 minute' },
+    { id: 6, step: skinAnalysis.concerns.length > 0 
+      ? `Treatment for ${skinAnalysis.concerns.join(' & ')}` 
+      : 'Basic Treatment', 
+      time: '1 minute' 
+    },
     { id: 7, step: 'Hydrating Serum', time: '1 minute' },
     { id: 8, step: 'Moisturizer', time: '30 seconds' }
   ];
 
-  const handleStepComplete = (stepId, isNight = false) => {
+  const handleStepComplete = (stepId: number, isNight = false) => {
     if (isNight) {
       if (!nightCompleted.includes(stepId)) {
         setNightCompleted([...nightCompleted, stepId]);
-        setPoints(prev => prev + 0.5);
+        setPoints(points + 0.5);
       }
     } else {
       if (!morningCompleted.includes(stepId)) {
         setMorningCompleted([...morningCompleted, stepId]);
-        setPoints(prev => prev + 0.5);
+        setPoints(points + 0.5);
       }
     }
   };
@@ -53,7 +72,7 @@ const RoutineTracker = ({ points, setPoints }) => {
     <div className="container mx-auto px-4 py-8">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-4">
-          Your Daily Routine
+          Welcome back, {userProfile.firstName}!
         </h1>
         <p className="text-gray-600 mb-6">
           Complete your morning and night routines to earn points and unlock rewards!
