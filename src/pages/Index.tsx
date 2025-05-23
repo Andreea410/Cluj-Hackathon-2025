@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,11 +17,20 @@ const Index = () => {
     concerns: [],
     sensitivity: 'low'
   });
-  const [points, setPoints] = useState(0);
+  const [points, setPoints] = useState<number>(0);
+
+  useEffect(() => {
+    console.log('Current step:', currentStep);
+    console.log('User profile:', userProfile);
+    console.log('Skin analysis:', skinAnalysis);
+  }, [currentStep, userProfile, skinAnalysis]);
 
   const handleRegistration = (profile) => {
+    console.log('Registration handler called with:', profile);
     setUserProfile(profile);
+    
     if (profile.isExistingUser) {
+      console.log('Existing user, setting skin analysis and moving to routine');
       setSkinAnalysis({
         skinType: 'combination',
         concerns: ['acne', 'aging'],
@@ -29,35 +38,51 @@ const Index = () => {
       });
       setCurrentStep('routine');
     } else {
+      console.log('New user, moving to skin analysis quiz');
       setCurrentStep('skinAnalysis');
     }
   };
 
   const handleSkinAnalysis = (analysis) => {
+    console.log('Skin analysis completed:', analysis);
     setSkinAnalysis(analysis);
     setCurrentStep('routine');
   };
 
   const renderCurrentStep = () => {
+    console.log('Rendering step:', currentStep);
+    
     switch (currentStep) {
       case 'registration':
         return <RegistrationForm onComplete={handleRegistration} />;
       case 'skinAnalysis':
         return <SkinAnalysisQuiz onComplete={handleSkinAnalysis} />;
       case 'routine':
-        return <RoutineTracker 
-          points={points} 
-          setPoints={setPoints} 
-          skinAnalysis={skinAnalysis} 
-          userProfile={userProfile}
-        />;
+        console.log('Rendering routine with:', {
+          points,
+          userProfile,
+          skinAnalysis
+        });
+        return (
+          <RoutineTracker 
+            points={points} 
+            setPoints={setPoints} 
+            skinAnalysis={skinAnalysis} 
+            userProfile={userProfile}
+          />
+        );
       case 'pricing':
         return <PricingPlans />;
       default:
-        return <WelcomeSection 
-          onGetStarted={() => setCurrentStep('registration')} 
-          onViewPricing={() => setCurrentStep('pricing')} 
-        />;
+        return (
+          <WelcomeSection 
+            onGetStarted={() => {
+              console.log('Starting registration flow');
+              setCurrentStep('registration');
+            }} 
+            onViewPricing={() => setCurrentStep('pricing')} 
+          />
+        );
     }
   };
 
