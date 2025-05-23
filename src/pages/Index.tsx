@@ -1,163 +1,70 @@
-import { useState, useEffect } from 'react';
+
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, Shield, Zap, Camera, Calendar, Gift, LogOut } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
-import AuthPage from '@/components/AuthPage';
-import UserProfileForm from '@/components/UserProfileForm';
+import { Star, Shield, Zap, Camera, Calendar, Gift } from 'lucide-react';
+import RegistrationForm from '@/components/RegistrationForm';
 import SkinAnalysisQuiz from '@/components/SkinAnalysisQuiz';
-import RoutineWithProducts from '@/components/RoutineWithProducts';
+import ProductRecommendations from '@/components/ProductRecommendations';
+import RoutineTracker from '@/components/RoutineTracker';
 import PricingPlans from '@/components/PricingPlans';
-import { supabase } from '@/integrations/supabase/client';
 
 const Index = () => {
-  const { user, signOut, loading } = useAuth();
   const [currentStep, setCurrentStep] = useState('welcome');
   const [userProfile, setUserProfile] = useState(null);
   const [skinAnalysis, setSkinAnalysis] = useState(null);
+  const [points, setPoints] = useState(0);
 
-  // Check user profile completion when user logs in
-  useEffect(() => {
-    if (user && currentStep === 'welcome') {
-      checkUserProfile();
-    }
-  }, [user, currentStep]);
-
-  const checkUserProfile = async () => {
-    if (!user) return;
-
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profile?.age && profile?.gender) {
-        // Profile is complete, check if they've done the quiz
-        const { data: responses } = await supabase
-          .from('user_responses')
-          .select('*')
-          .eq('auth_user_id', user.id);
-
-        if (responses && responses.length > 0) {
-          // They've done the quiz, go to routine
-          setCurrentStep('routine');
-          // Reconstruct skin analysis from responses
-          const analysis = {};
-          responses.forEach(response => {
-            analysis[response.question_id] = response.option_id;
-          });
-          setSkinAnalysis(analysis);
-        } else {
-          // Profile complete but no quiz
-          setCurrentStep('skinAnalysis');
-        }
-      } else {
-        // Profile incomplete
-        setCurrentStep('profileForm');
-      }
-    } catch (error) {
-      console.error('Error checking profile:', error);
-    }
-  };
-
-  const handleProfileComplete = () => {
+  const handleRegistration = (profile) => {
+    setUserProfile(profile);
     setCurrentStep('skinAnalysis');
   };
 
-  const handleSkinAnalysis = (analysis: any) => {
+  const handleSkinAnalysis = (analysis) => {
     setSkinAnalysis(analysis);
-    setCurrentStep('routine');
+    setCurrentStep('recommendations');
   };
-
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      setCurrentStep('welcome');
-      setSkinAnalysis(null);
-      setUserProfile(null);
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <AuthPage />;
-  }
 
   const renderCurrentStep = () => {
     switch (currentStep) {
-      case 'profileForm':
-        return <UserProfileForm onComplete={handleProfileComplete} />;
+      case 'registration':
+        return <RegistrationForm onComplete={handleRegistration} />;
       case 'skinAnalysis':
         return <SkinAnalysisQuiz onComplete={handleSkinAnalysis} />;
+      case 'recommendations':
+        return <ProductRecommendations skinAnalysis={skinAnalysis} onContinue={() => setCurrentStep('routine')} />;
       case 'routine':
-        return <RoutineWithProducts skinAnalysis={skinAnalysis} />;
+        return <RoutineTracker points={points} setPoints={setPoints} />;
       case 'pricing':
         return <PricingPlans />;
       default:
-        return <WelcomeSection onGetStarted={() => setCurrentStep('profileForm')} onViewPricing={() => setCurrentStep('pricing')} />;
+        return <WelcomeSection onGetStarted={() => setCurrentStep('registration')} onViewPricing={() => setCurrentStep('pricing')} />;
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">
-      {/* Header with logout button */}
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            Skinetic
-          </h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">
-              Welcome, {user.user_metadata?.first_name || user.email}!
-            </span>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={handleSignOut}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </div>
-      
       {renderCurrentStep()}
     </div>
   );
 };
 
-const WelcomeSection = ({ onGetStarted, onViewPricing }: { onGetStarted: () => void; onViewPricing: () => void }) => (
+const WelcomeSection = ({ onGetStarted, onViewPricing }) => (
   <div className="container mx-auto px-4 py-12">
     <div className="text-center mb-16">
       <h1 className="text-5xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-6">
-        Welcome Back!
+        SkinCare AI
       </h1>
       <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-        Continue your personalized skincare journey. Complete your profile and get AI-powered recommendations.
+        Your personalized skincare journey powered by AI. Get custom routines, track progress, and achieve your best skin ever.
       </p>
       <div className="flex gap-4 justify-center">
         <Button 
           onClick={onGetStarted}
           className="bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-8 py-3 rounded-full text-lg"
         >
-          Complete Your Profile
+          Start Your Journey
         </Button>
         <Button 
           variant="outline" 
