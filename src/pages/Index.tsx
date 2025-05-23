@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Star, Shield, Zap, Camera, Calendar, Gift } from 'lucide-react';
 import RegistrationForm from '@/components/RegistrationForm';
-import SkinAnalysisQuiz from '@/components/SkinAnalysisQuiz';
+import AIProfileBuilder from '@/components/AIProfileBuilder';
 import ProductRecommendations from '@/components/ProductRecommendations';
 import RoutineTracker from '@/components/RoutineTracker';
 import PricingPlans from '@/components/PricingPlans';
@@ -56,7 +56,7 @@ const Index = () => {
       case 'registration':
         return <RegistrationForm onComplete={handleRegistration} />;
       case 'skinAnalysis':
-        return <SkinAnalysisQuiz onComplete={handleSkinAnalysis} />;
+        return <AIProfileBuilder onComplete={handleSkinAnalysis} />;
       case 'routine':
         console.log('Rendering routine with:', {
           points,
