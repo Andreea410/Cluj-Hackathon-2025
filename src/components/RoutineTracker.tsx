@@ -8,9 +8,20 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sun, Moon, Gift, Camera, Calendar } from 'lucide-react';
 
-const RoutineTracker = ({ points, setPoints }) => {
-  const [morningCompleted, setMorningCompleted] = useState([]);
-  const [nightCompleted, setNightCompleted] = useState([]);
+interface RoutineTrackerProps {
+  points: number;
+  setPoints: (value: number | ((prevPoints: number) => number)) => void;
+  skinAnalysis: {
+    skinType: string;
+    concerns: string[];
+    sensitivity: string;
+  };
+  userProfile: any;
+}
+
+const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: RoutineTrackerProps) => {
+  const [morningCompleted, setMorningCompleted] = useState<number[]>([]);
+  const [nightCompleted, setNightCompleted] = useState<number[]>([]);
   const [showReward, setShowReward] = useState(false);
   const [dailyPointAwarded, setDailyPointAwarded] = useState(false);
 
