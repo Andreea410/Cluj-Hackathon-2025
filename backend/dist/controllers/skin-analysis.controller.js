@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SkinAnalysisController = void 0;
 const common_1 = require("@nestjs/common");
@@ -57,6 +58,6 @@ __decorate([
 exports.SkinAnalysisController = SkinAnalysisController = __decorate([
     (0, common_1.Controller)('skin-analysis'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [skin_analysis_service_1.SkinAnalysisService])
+    __metadata("design:paramtypes", [typeof (_a = typeof skin_analysis_service_1.SkinAnalysisService !== "undefined" && skin_analysis_service_1.SkinAnalysisService) === "function" ? _a : Object])
 ], SkinAnalysisController);
 //# sourceMappingURL=skin-analysis.controller.js.map

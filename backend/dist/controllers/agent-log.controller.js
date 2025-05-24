@@ -14,8 +14,8 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AgentLogController = void 0;
 const common_1 = require("@nestjs/common");
-const agent_log_service_1 = require("../services/agent-log.service");
 const agent_log_model_1 = require("../models/agent-log.model");
+const agent_log_service_1 = require("../services/agent-log.service");
 let AgentLogController = class AgentLogController {
     constructor(agentLogService) {
         this.agentLogService = agentLogService;

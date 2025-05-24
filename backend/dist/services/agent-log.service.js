@@ -12,63 +12,40 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AgentLogService = void 0;
 const common_1 = require("@nestjs/common");
 const base_service_1 = require("./base.service");
-const base_supabase_repository_1 = require("../repositories/base.supabase.repository");
+const agent_log_repository_1 = require("../repositories/agent-log.repository");
 let AgentLogService = class AgentLogService extends base_service_1.BaseService {
     constructor(agentLogRepository) {
         super(agentLogRepository);
         this.agentLogRepository = agentLogRepository;
     }
     async createAgentLog(agentLog) {
-        this.validateMessage(agentLog.message);
-        this.validateRole(agentLog.role);
         return this.create(agentLog);
     }
-    async findByUserId(userId) {
-        return this.agentLogRepository.find({ user_id: userId });
-    }
-    async findByRole(role) {
-        return this.agentLogRepository.findByRole(role);
-    }
-    async findByUserAndRole(userId, role) {
-        return this.agentLogRepository.findByUserAndRole(userId, role);
+    async updateAgentLog(id, agentLog) {
+        return this.update(id, agentLog);
     }
     async findWithUser(id) {
         return this.agentLogRepository.findWithUser(id);
     }
-    async findAllWithUsers() {
-        return this.agentLogRepository.findAllWithUsers();
+    async findByUserAndRole(userId, role) {
+        return this.agentLogRepository.findByUserAndRole(userId, role);
     }
-    async findLatestByUser(userId, limit = 10) {
+    async findLatestByUser(userId, limit) {
         return this.agentLogRepository.findLatestByUser(userId, limit);
     }
-    async updateAgentLog(id, agentLog) {
-        const { user_id, ...updateData } = agentLog;
-        if (updateData.message) {
-            this.validateMessage(updateData.message);
-        }
-        if (updateData.role) {
-            this.validateRole(updateData.role);
-        }
-        return this.update(id, updateData);
+    async findByUserId(userId) {
+        return this.agentLogRepository.findByUserId(userId);
     }
-    validateMessage(message) {
-        if (!message || typeof message !== 'object') {
-            throw new Error('Message must be a valid JSON object');
-        }
+    async findByRole(role) {
+        return this.agentLogRepository.findByRole(role);
     }
-    validateRole(role) {
-        const validRoles = ['user', 'assistant', 'system', 'function'];
-        if (!validRoles.includes(role)) {
-            throw new Error(`Role must be one of: ${validRoles.join(', ')}`);
-        }
-    }
-    async create(log) {
-        return this.agentLogRepository.create(log);
+    async findAllWithUsers() {
+        return this.agentLogRepository.findAllWithUsers();
     }
 };
 exports.AgentLogService = AgentLogService;
 exports.AgentLogService = AgentLogService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [base_supabase_repository_1.BaseSupabaseRepository])
+    __metadata("design:paramtypes", [agent_log_repository_1.AgentLogRepository])
 ], AgentLogService);
 //# sourceMappingURL=agent-log.service.js.map

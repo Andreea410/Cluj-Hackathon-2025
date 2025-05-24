@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpException, HttpStatus } from '@nestjs/common';
-import { AgentLogService } from '../services/agent-log.service';
 import { AgentLog } from '../models/agent-log.model';
+import { AgentLogService } from '../services/agent-log.service';
 
 @Controller('agent-logs')
 export class AgentLogController {
