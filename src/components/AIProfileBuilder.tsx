@@ -109,7 +109,6 @@ Respond conversationally, ask follow-ups to clarify if needed.
       return "Perfect! I have all the information needed. You can type 'done' to complete your profile, or add any additional notes about your skin.";
     }
 
-    // If we have all main fields, treat input as notes
     setProfile(prev => ({ ...prev, notes: userInput }));
     return "Thanks for the additional information! Type 'done' when you're ready to complete your profile.";
   };
@@ -117,7 +116,7 @@ Respond conversationally, ask follow-ups to clarify if needed.
   const handleSendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMessage = { role: "user", content: input.trim() };
+    const userMessage: Message = { role: "user" as const, content: input.trim() };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
