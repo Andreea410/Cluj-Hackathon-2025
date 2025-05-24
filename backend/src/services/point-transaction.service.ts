@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { BaseService } from './base.service';
 import { PointTransaction } from '../models/point-transaction.model';
-import { IPointTransactionRepository } from '../repositories/interfaces/point-transaction.repository.interface';
+import { PointTransactionRepository } from '../repositories/point-transaction.repository';
 
 @Injectable()
 export class PointTransactionService extends BaseService<PointTransaction> {
-  constructor(private readonly pointTransactionRepository: IPointTransactionRepository) {
+  constructor(private readonly pointTransactionRepository: PointTransactionRepository) {
     super(pointTransactionRepository);
   }
 

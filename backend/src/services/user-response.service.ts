@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { BaseService } from './base.service';
 import { UserResponse } from '../models/user-response.model';
-import { IUserResponseRepository } from '../repositories/interfaces/user-response.repository.interface';
+import { UserResponseRepository } from '../repositories/user-response.repository';
 
 @Injectable()
 export class UserResponseService extends BaseService<UserResponse> {
-  constructor(private readonly userResponseRepository: IUserResponseRepository) {
+  constructor(private readonly userResponseRepository: UserResponseRepository) {
     super(userResponseRepository);
   }
 

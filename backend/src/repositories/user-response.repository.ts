@@ -145,10 +145,7 @@ export class UserResponseRepository extends BaseSupabaseRepository<UserResponse>
 
   async countResponsesByOption(questionId: string): Promise<Record<string, number>> {
     const { data, error } = await this.supabase
-      .from(this.tableName)
-      .select('option_id, count', { count: 'exact' })
-      .eq('question_id', questionId)
-      .group_by('option_id');
+      .rpc('count_responses_by_option', { question_id: questionId });
 
     if (error) throw new DatabaseError(error.message);
     

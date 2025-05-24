@@ -5,15 +5,16 @@ export class User extends BaseModel {
   email: string;
   hashed_password: string;
   role_id: string;
-  created_at: Date;
+  first_name: string;
+  last_name: string;
   role?: Role; // Optional property for when role is included
+  password?: string; // Temporary field for password handling
 
-  constructor(partial: Partial<User>) {
+  constructor(partial: Partial<User> & { password?: string }) {
     super();
-    Object.assign(this, partial);
-    if (partial.created_at) {
-      this.created_at = new Date(partial.created_at);
-    }
+    // Remove password if it exists in the input
+    const { password, ...userData } = partial;
+    Object.assign(this, userData);
   }
 
   toJSON() {
@@ -22,7 +23,8 @@ export class User extends BaseModel {
       email: this.email,
       hashed_password: this.hashed_password,
       role_id: this.role_id,
-      created_at: this.created_at,
+      first_name: this.first_name,
+      last_name: this.last_name,
       ...(this.role && { role: this.role.toJSON() })
     };
   }
@@ -33,7 +35,8 @@ export class User extends BaseModel {
       email: json.email,
       hashed_password: json.hashed_password,
       role_id: json.role_id,
-      created_at: json.created_at,
+      first_name: json.first_name,
+      last_name: json.last_name,
       ...(json.role && { role: Role.fromJSON(json.role) })
     });
   }

@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { BaseService } from './base.service';
 import { AnswerOption } from '../models/answer-option.model';
-import { IAnswerOptionRepository } from '../repositories/interfaces/answer-option.repository.interface';
+import { AnswerOptionRepository } from '../repositories/answer-option.repository';
 import { Question } from '../models/question.model';
 
 @Injectable()
 export class AnswerOptionService extends BaseService<AnswerOption> {
-  constructor(private readonly answerOptionRepository: IAnswerOptionRepository) {
+  constructor(private readonly answerOptionRepository: AnswerOptionRepository) {
     super(answerOptionRepository);
   }
 

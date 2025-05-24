@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
+import { api } from '@/services/api';
 
 interface RegistrationFormProps {
   onComplete: (profile: any) => void;
@@ -32,7 +33,7 @@ const RegistrationForm = ({ onComplete }: RegistrationFormProps) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const userData = await api.login(loginData.email, loginData.password);
       onComplete({
         email: loginData.email,
         isExistingUser: true
@@ -44,7 +45,7 @@ const RegistrationForm = ({ onComplete }: RegistrationFormProps) => {
     } catch (error: any) {
       toast({
         title: "Login failed",
-        description: error.message || "Please check your credentials and try again.",
+        description: error.response?.data?.message || error.message || "Please check your credentials and try again.",
         variant: "destructive",
       });
     } finally {
@@ -66,21 +67,28 @@ const RegistrationForm = ({ onComplete }: RegistrationFormProps) => {
 
     setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const userData = await api.register({
+        email: registrationData.email,
+        password: registrationData.password,
+        firstName: registrationData.firstName,
+        lastName: registrationData.lastName,
+      });
+
       onComplete({
         firstName: registrationData.firstName,
         lastName: registrationData.lastName,
         email: registrationData.email,
         isNewUser: true
       });
+      
       toast({
         title: "Registration successful!",
-        description: "Welcome to SkinCare AI.",
+        description: "Welcome to Skinetic.",
       });
     } catch (error: any) {
       toast({
         title: "Registration failed",
-        description: error.message || "Please try again later.",
+        description: error.response?.data?.message || error.message || "Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -93,7 +101,7 @@ const RegistrationForm = ({ onComplete }: RegistrationFormProps) => {
       <Card className="w-full max-w-md border-0 shadow-2xl bg-white/90 backdrop-blur">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            Welcome to SkinCare AI
+            Welcome to Skinetic
           </CardTitle>
           <CardDescription>
             Sign in to your account or create a new one
@@ -117,6 +125,7 @@ const RegistrationForm = ({ onComplete }: RegistrationFormProps) => {
                     onChange={(e) => setLoginData({...loginData, email: e.target.value})}
                     required
                     className="border-purple-200 focus:border-purple-400"
+                    autoComplete="email"
                   />
                 </div>
                 <div className="space-y-2">
@@ -175,6 +184,7 @@ const RegistrationForm = ({ onComplete }: RegistrationFormProps) => {
                     onChange={(e) => setRegistrationData({...registrationData, email: e.target.value})}
                     required
                     className="border-purple-200 focus:border-purple-400"
+                    autoComplete="email"
                   />
                 </div>
                 <div className="space-y-2">
