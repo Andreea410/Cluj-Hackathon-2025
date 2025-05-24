@@ -96,99 +96,15 @@ Respond conversationally, ask follow-ups to clarify if needed.
   const getQuestionForField = (field: keyof Profile | null): string => {
     switch (field) {
       case 'skin_type':
-        return "Hello! I'm here to help assess your skin condition and create a personalized treatment plan. Let's start with your skin's sebum production and hydration levels. Throughout the day, do you notice: excessive oil production (especially in the T-zone), persistent dryness or tightness, combination of both in different areas, or generally balanced skin? Also, how does your skin feel after cleansing?";
-      
+        return "Hi! I'm here to help create your personalized skincare profile. Let's start with your skin type. Would you say your skin is oily, dry, combination, or normal?";
       case 'breakout_freq':
-        return "Thank you for those details about your skin's characteristics. Now, let's discuss any inflammatory conditions you might experience. How often do you notice active lesions or breakouts? Do they present as papules (small red bumps), pustules (whiteheads), or cystic acne? And are they concentrated in specific areas of your face? Understanding the pattern and type will help us determine the best approach for your skin.";
-      
+        return "How often do you experience breakouts? (Never, monthly, weekly, or daily?)";
       case 'concerns':
-        return "You're providing valuable information for your skin assessment. Beyond what we've discussed, I'd like to know about any other dermatological concerns you're experiencing. This could include: inflammatory conditions (rosacea, eczema), hyperpigmentation (post-inflammatory or melasma), signs of photoaging, keratosis pilaris, or any other skin conditions you've noticed. Please describe any symptoms or changes you've observed.";
-      
+        return "What are your main skin concerns? For example: sensitivity, hyperpigmentation, aging, acne, etc. You can list multiple concerns.";
       case 'notes':
-        return "Before we finalize your assessment, I'd like to gather some additional clinical context. Could you tell me about: any skin allergies or sensitivities you've experienced, your skin's reaction to sun exposure (does it burn easily?), any family history of skin conditions, and any treatments or medications you've previously tried? This information will help us create a more comprehensive treatment approach.";
-      
+        return "Would you like to add any additional notes about your skin? If not, just type 'done'.";
       default:
-        return "Based on your detailed assessment, I believe we have enough information to create your personalized skincare protocol. Type 'done' when you're ready to receive your recommendations.";
-    }
-  };
-
-  const getInteractiveResponse = (field: keyof Profile, value: any): string => {
-    switch (field) {
-      case 'skin_type': {
-        const responses = {
-          oily: "I understand you're experiencing excess sebum production. This can be influenced by various factors including hormones and genetics. A few clinical questions: Do you notice more oil production during certain times of your menstrual cycle? Is the oiliness accompanied by enlarged or congested pores? And how does your skin respond to mattifying products - does it sometimes overcompensate with even more oil production?",
-          
-          dry: "I see you're dealing with reduced sebum production and possibly compromised barrier function. Let's assess this further: Do you experience any scaling or flaking? Is there any associated redness or irritation? And importantly, does the dryness feel superficial, or does your skin feel tight and dehydrated at a deeper level? Also, have you noticed if certain environmental factors exacerbate the condition?",
-          
-          combination: "Combination skin presents unique treatment challenges. Let's map your skin's behavior: Could you specify which areas experience excess oil (typically T-zone) versus dryness? Do these patterns shift with seasonal changes? And have you noticed if treating one condition (like oiliness) tends to exacerbate the other (dryness)? This will help us develop a targeted zone-specific treatment approach.",
-          
-          normal: "While your skin appears well-balanced, it's still important to maintain its homeostasis. Let's discuss some preventive aspects: Have you noticed any seasonal variations in your skin's behavior? How does your skin respond to different environmental stressors (pollution, climate changes)? And what's your skin's typical recovery time after exposure to potential irritants?"
-        };
-        
-        const skinType = value.toLowerCase();
-        return responses[skinType as keyof typeof responses] || 
-               "Let's discuss your skin's inflammatory response patterns. How frequently do you experience breakouts or other forms of inflammation?";
-      }
-
-      case 'breakout_freq': {
-        const responses = {
-          never: "It's excellent that you don't experience inflammatory acne. However, let's discuss prevention: Have you always maintained clear skin, or did you previously experience breakouts? What preventive measures do you currently employ? Also, do you notice any microcomedones (small flesh-colored bumps) even if they don't develop into active breakouts?",
-          
-          rarely: "Occasional breakouts can often be traced to specific triggers. Let's identify yours: When breakouts do occur, what type do you typically experience (comedonal, inflammatory, hormonal)? Have you noticed any correlation with stress levels, dietary changes, or specific skincare products? Also, how long do the lesions typically take to resolve?",
-          
-          monthly: "The cyclical nature of your breakouts suggests a hormonal component. Let's analyze the pattern: Do they typically appear in the same areas (like jawline or chin)? Are they more inflammatory or comedonal in nature? And do you notice any other cyclical skin changes, such as increased oil production or sensitivity during these times?",
-          
-          weekly: "Frequent breakouts require a systematic treatment approach. To develop this, I need to understand: What's the primary type of lesions you experience (papules, pustules, or cysts)? Are they concentrated in specific areas? Have you noticed any correlation with external factors like diet, stress, or specific products? Also, how long does each breakout typically last?",
-          
-          daily: "Persistent acne can significantly impact skin health. Let's do a detailed assessment: Could you describe the predominant type of lesions? Are you experiencing any post-inflammatory hyperpigmentation? Have you noticed any scarring (ice pick, boxcar, or rolling scars)? Understanding these aspects will help us develop both an active treatment plan and a long-term maintenance strategy."
-        };
-        
-        const freq = value.toLowerCase().match(/(never|rarely|monthly|weekly|daily)/)?.[0];
-        return responses[freq as keyof typeof responses] || 
-               "Now, let's discuss any other dermatological concerns you may have. This could include texture irregularities, pigmentation issues, or signs of photoaging.";
-      }
-
-      case 'concerns': {
-        const concernResponses = {
-          sensitivity: "Let's assess your skin's reactivity in detail. When you experience sensitivity, do you notice: immediate or delayed reactions? Any specific triggers (fragrances, certain ingredients, environmental factors)? Does the reaction present as redness, burning, itching, or all of these? Also, how long does it typically take for your skin to return to baseline after a reaction?",
-          
-          hyperpigmentation: "Understanding the nature of your hyperpigmentation will help determine the best treatment approach. Is it post-inflammatory (following breakouts or injuries), melasma (hormone-related), or sun-induced? How long have you had these areas of pigmentation? Have you noticed any changes in their appearance over time? Also, have you previously tried any brightening treatments?",
-          
-          aging: "Let's assess the specific signs of photoaging you're experiencing. Are you noticing fine lines, dynamic wrinkles, or deeper set lines? Is there any loss of firmness or elasticity? Have you observed any changes in skin texture or tone? Also, are these changes generalized or more pronounced in certain areas? Understanding these details will help us prioritize treatment strategies.",
-          
-          acne: "Let's do a comprehensive acne assessment. Could you describe: the primary type of lesions (comedones, papules, pustules, nodules)? Their typical location and pattern of spread? Any triggers you've identified? Also, are you experiencing any post-inflammatory effects (redness or pigmentation)? This will help us develop a targeted treatment protocol.",
-          
-          redness: "Facial redness can have various underlying causes. Does the redness: come and go or remain persistent? Worsen with specific triggers (heat, stress, certain foods)? Accompany other symptoms like flushing or visible blood vessels? Also, have you noticed any papules or pustules in the red areas? This information will help determine if we're dealing with rosacea, sensitivity, or another condition.",
-          
-          texture: "Let's analyze your skin's texture concerns. Are you experiencing: rough patches, enlarged pores, small bumps (possibly keratosis pilaris), or uneven surface? Are these issues consistent or do they vary with your skin's hydration levels? Also, have you noticed any correlation with your skincare routine or environmental factors?"
-        };
-
-        const concerns = value as string[];
-        let response = "Thank you for sharing these concerns. Let's examine them in more detail. ";
-        
-        const matchedConcern = concerns.find(c => 
-          Object.keys(concernResponses).some(key => c.includes(key))
-        );
-
-        if (matchedConcern) {
-          for (const [key, question] of Object.entries(concernResponses)) {
-            if (matchedConcern.includes(key)) {
-              response += question;
-              break;
-            }
-          }
-        } else {
-          response += "Could you provide more specific details about how these concerns manifest? Understanding the precise symptoms and patterns will help us develop the most effective treatment protocol.";
-        }
-
-        return response + "\n\nPlease share any additional clinical history or observations, or type 'done' if you've provided all relevant information.";
-      }
-
-      case 'notes':
-        return "Thank you for providing these additional details. This information will be valuable in customizing your treatment protocol. Type 'done' when you're ready to receive your personalized skincare recommendations.";
-
-      default:
-        return "Based on our comprehensive assessment, I believe we have sufficient information to develop your personalized skincare protocol. Type 'done' to proceed with your recommendations.";
+        return "Perfect! Type 'done' to complete your profile.";
     }
   };
 
@@ -216,36 +132,36 @@ Respond conversationally, ask follow-ups to clarify if needed.
     const userInputLower = userInput.toLowerCase();
     const nextField = getNextField(profile);
     
+    // Check if user wants to end the conversation
     if (userInputLower === 'end' || userInputLower === 'done') {
       if (nextField) {
-        return "To provide you with the most accurate treatment recommendations, I still need some additional information. " + 
+        return "We still need some information to complete your profile. " + 
                getQuestionForField(nextField);
       }
       
       onComplete(profile);
-      return "Thank you for providing such detailed information about your skin condition. Based on our comprehensive assessment, I've developed a personalized treatment protocol that addresses your specific concerns and skin characteristics. Let's proceed to your customized recommendations.";
+      return "Great! I've completed your profile. You'll now be directed to your personalized routine.";
     }
 
+    // Process the response based on what information we're missing
     try {
       switch (nextField) {
         case 'skin_type': {
           const skinTypes = ['oily', 'dry', 'combination', 'normal'];
           if (skinTypes.some(type => userInputLower.includes(type))) {
-            const skinType = skinTypes.find(type => userInputLower.includes(type)) || '';
-            await updateProfileField('skin_type', skinType);
-            return getInteractiveResponse('skin_type', skinType);
+            await updateProfileField('skin_type', userInputLower);
+            return getQuestionForField('breakout_freq');
           }
-          return "I want to make sure I understand your skin type correctly. Could you specify if it's oily, dry, combination, or normal? This will help me provide the most accurate recommendations.";
+          return "I'm not quite sure about your skin type. Could you specify if it's oily, dry, combination, or normal?";
         }
 
         case 'breakout_freq': {
-          const freqTerms = ['never', 'monthly', 'weekly', 'daily', 'rarely'];
+          const freqTerms = ['never', 'monthly', 'weekly', 'daily'];
           if (freqTerms.some(freq => userInputLower.includes(freq))) {
-            const freq = freqTerms.find(f => userInputLower.includes(f)) || '';
-            await updateProfileField('breakout_freq', freq);
-            return getInteractiveResponse('breakout_freq', freq);
+            await updateProfileField('breakout_freq', userInputLower);
+            return getQuestionForField('concerns');
           }
-          return "To better understand your breakout patterns, could you tell me if you experience them never, rarely, monthly, weekly, or daily? This will help us target your skincare routine appropriately.";
+          return "Could you clarify how often you experience breakouts? (Never, monthly, weekly, or daily?)";
         }
 
         case 'concerns': {
@@ -256,16 +172,16 @@ Respond conversationally, ask follow-ups to clarify if needed.
             .filter(s => s.length > 0);
           
           await updateProfileField('concerns', concerns);
-          return getInteractiveResponse('concerns', concerns);
+          return getQuestionForField('notes');
         }
 
         case 'notes': {
           await updateProfileField('notes', userInput);
-          return getInteractiveResponse('notes', userInput);
+          return "Thanks for the additional information! Type 'done' when you're ready to complete your profile.";
         }
 
         default:
-          return "You've provided great insights about your skin! Type 'done' when you're ready to proceed.";
+          return "Perfect! Type 'done' to complete your profile.";
       }
     } catch (error) {
       console.error('Error processing response:', error);
@@ -276,18 +192,18 @@ Respond conversationally, ask follow-ups to clarify if needed.
   const handleSendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMessage: Message = { role: "user" as const, content: input.trim() };
+    const userMessage = { role: "user", content: input.trim() };
     setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
 
     try {
       const aiResponse = await processAIResponse(input.trim());
-      setMessages(prev => [...prev, { role: "assistant" as const, content: aiResponse }]);
+      setMessages(prev => [...prev, { role: "assistant", content: aiResponse }]);
     } catch (error) {
       console.error('Error getting AI response:', error);
       setMessages(prev => [...prev, { 
-        role: "assistant" as const, 
+        role: "assistant", 
         content: "I'm sorry, I encountered an error. Could you please try again?" 
       }]);
     } finally {
