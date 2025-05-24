@@ -96,7 +96,7 @@ const WelcomeSection = ({ onGetStarted, onViewPricing }) => (
   <div className="container mx-auto px-4 py-12">
     <div className="text-center mb-16">
       <h1 className="text-5xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent mb-6">
-        SkinCare AI
+        Skinetic
       </h1>
       <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
         Your personalized skincare journey powered by AI. Get custom routines, track progress, and achieve your best skin ever.
