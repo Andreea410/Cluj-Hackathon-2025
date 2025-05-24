@@ -4,10 +4,10 @@ export declare class User extends BaseModel {
     email: string;
     hashed_password: string;
     role_id: string;
-    created_at: Date;
     first_name: string;
     last_name: string;
     role?: Role;
+    password?: string;
     constructor(partial: Partial<User> & {
         password?: string;
     });
@@ -19,7 +19,6 @@ export declare class User extends BaseModel {
         email: string;
         hashed_password: string;
         role_id: string;
-        created_at: Date;
         first_name: string;
         last_name: string;
     };

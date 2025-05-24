@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { BaseService } from './base.service';
 import { AgentLog } from '../models/agent-log.model';
-import { IAgentLogRepository } from '../repositories/interfaces/agent-log.repository.interface';
+import { BaseSupabaseRepository } from '../repositories/base.supabase.repository';
 
 @Injectable()
 export class AgentLogService extends BaseService<AgentLog> {
-  constructor(private readonly agentLogRepository: IAgentLogRepository) {
+  constructor(private readonly agentLogRepository: BaseSupabaseRepository<AgentLog>) {
     super(agentLogRepository);
   }
 
@@ -20,7 +20,7 @@ export class AgentLogService extends BaseService<AgentLog> {
   }
 
   async findByUserId(userId: string): Promise<AgentLog[]> {
-    return this.agentLogRepository.findByUserId(userId);
+    return this.agentLogRepository.find({ user_id: userId });
   }
 
   async findByRole(role: string): Promise<AgentLog[]> {
@@ -71,5 +71,9 @@ export class AgentLogService extends BaseService<AgentLog> {
     if (!validRoles.includes(role)) {
       throw new Error(`Role must be one of: ${validRoles.join(', ')}`);
     }
+  }
+
+  async create(log: AgentLog): Promise<AgentLog> {
+    return this.agentLogRepository.create(log);
   }
 } 

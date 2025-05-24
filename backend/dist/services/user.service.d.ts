@@ -3,7 +3,10 @@ import { User } from '../models/user.model';
 import { UserRepository } from '../repositories/user.repository';
 export declare class UserService extends BaseService<User> {
     private readonly userRepository;
+    private readonly logger;
     constructor(userRepository: UserRepository);
+    private validateUserData;
+    private ensureDefaultRole;
     createUser(userData: Partial<User> & {
         password: string;
     }): Promise<User>;

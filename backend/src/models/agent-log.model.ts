@@ -5,7 +5,7 @@ export class AgentLog extends BaseModel {
   user_id: string;
   role: string;
   message: Record<string, any>;
-  user?: User; // Optional property for when user is included
+  user?: User;
 
   constructor(partial: Partial<AgentLog>) {
     super();

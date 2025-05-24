@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AgentLogService = void 0;
 const common_1 = require("@nestjs/common");
 const base_service_1 = require("./base.service");
+const base_supabase_repository_1 = require("../repositories/base.supabase.repository");
 let AgentLogService = class AgentLogService extends base_service_1.BaseService {
     constructor(agentLogRepository) {
         super(agentLogRepository);
@@ -23,7 +24,7 @@ let AgentLogService = class AgentLogService extends base_service_1.BaseService {
         return this.create(agentLog);
     }
     async findByUserId(userId) {
-        return this.agentLogRepository.findByUserId(userId);
+        return this.agentLogRepository.find({ user_id: userId });
     }
     async findByRole(role) {
         return this.agentLogRepository.findByRole(role);
@@ -61,10 +62,13 @@ let AgentLogService = class AgentLogService extends base_service_1.BaseService {
             throw new Error(`Role must be one of: ${validRoles.join(', ')}`);
         }
     }
+    async create(log) {
+        return this.agentLogRepository.create(log);
+    }
 };
 exports.AgentLogService = AgentLogService;
 exports.AgentLogService = AgentLogService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [Object])
+    __metadata("design:paramtypes", [base_supabase_repository_1.BaseSupabaseRepository])
 ], AgentLogService);
 //# sourceMappingURL=agent-log.service.js.map

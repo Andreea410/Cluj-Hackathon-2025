@@ -16,52 +16,109 @@ export abstract class BaseSupabaseRepository<T extends BaseModel> implements IBa
   ) {}
 
   async create(entity: T): Promise<T> {
-    const { data, error } = await this.supabase
-      .from(this.tableName)
-      .insert(entity.toJSON())
-      .single();
+    try {
+      console.log(`Creating ${this.tableName} with data:`, entity.toJSON());
+      
+      // First insert the entity
+      const { data: insertData, error: insertError } = await this.supabase
+        .from(this.tableName)
+        .insert(entity.toJSON())
+        .select()
+        .single();
 
-    if (error) throw new DatabaseError(error.message);
-    return this.modelConstructor.fromJSON(data);
+      if (insertError) {
+        console.error(`Error inserting ${this.tableName}:`, insertError);
+        throw new DatabaseError(`Failed to create record: ${insertError.message}`);
+      }
+
+      if (!insertData) {
+        console.error(`No data returned after creating ${this.tableName}`);
+        throw new DatabaseError('No data returned after creation');
+      }
+
+      console.log(`Successfully created ${this.tableName}:`, insertData);
+      return this.modelConstructor.fromJSON(insertData);
+    } catch (error) {
+      console.error(`Error in create ${this.tableName}:`, error);
+      if (error instanceof DatabaseError) {
+        throw error;
+      }
+      throw new DatabaseError(`Failed to create record: ${error.message}`);
+    }
   }
 
   async findById(id: string): Promise<T | null> {
-    const { data, error } = await this.supabase
-      .from(this.tableName)
-      .select('*')
-      .eq('id', id)
-      .single();
+    try {
+      const { data, error } = await this.supabase
+        .from(this.tableName)
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
 
-    if (error) throw new DatabaseError(error.message);
-    return data ? this.modelConstructor.fromJSON(data) : null;
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No rows returned
+          return null;
+        }
+        throw new DatabaseError(error.message);
+      }
+
+      return data ? this.modelConstructor.fromJSON(data) : null;
+    } catch (error) {
+      console.error('Error finding record:', error);
+      return null;
+    }
   }
 
   async findAll(): Promise<T[]> {
-    const { data, error } = await this.supabase
-      .from(this.tableName)
-      .select('*');
+    try {
+      const { data, error } = await this.supabase
+        .from(this.tableName)
+        .select('*');
 
-    if (error) throw new DatabaseError(error.message);
-    return data.map(item => this.modelConstructor.fromJSON(item));
+      if (error) throw new DatabaseError(error.message);
+      return data.map(item => this.modelConstructor.fromJSON(item));
+    } catch (error) {
+      console.error('Error finding records:', error);
+      throw new DatabaseError('Failed to fetch records');
+    }
   }
 
   async update(id: string, entity: Partial<T>): Promise<T> {
-    const { data, error } = await this.supabase
-      .from(this.tableName)
-      .update(entity)
-      .eq('id', id)
-      .single();
+    try {
+      const { data, error } = await this.supabase
+        .from(this.tableName)
+        .update(entity)
+        .eq('id', id)
+        .select()
+        .single();
 
-    if (error) throw new DatabaseError(error.message);
-    return this.modelConstructor.fromJSON(data);
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No rows returned
+          throw new DatabaseError('Record not found');
+        }
+        throw new DatabaseError(error.message);
+      }
+
+      return this.modelConstructor.fromJSON(data);
+    } catch (error) {
+      console.error('Error updating record:', error);
+      throw new DatabaseError('Failed to update record');
+    }
   }
 
   async delete(id: string): Promise<void> {
-    const { error } = await this.supabase
-      .from(this.tableName)
-      .delete()
-      .eq('id', id);
+    try {
+      const { error } = await this.supabase
+        .from(this.tableName)
+        .delete()
+        .eq('id', id);
 
-    if (error) throw new DatabaseError(error.message);
+      if (error) throw new DatabaseError(error.message);
+    } catch (error) {
+      console.error('Error deleting record:', error);
+      throw new DatabaseError('Failed to delete record');
+    }
   }
 } 
