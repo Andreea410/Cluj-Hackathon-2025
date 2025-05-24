@@ -9,9 +9,10 @@ export class IngredientBenefit extends BaseModel {
     Object.assign(this, partial);
   }
 
-  toJSON() {
+  override toJSON(): Record<string, any> {
+    const base = super.toJSON();
     return {
-      ...super.toJSON(),
+      ...base,
       ingredient_id: this.ingredient_id,
       benefit_id: this.benefit_id
     };

@@ -9,9 +9,10 @@ export class Benefit extends BaseModel {
     Object.assign(this, partial);
   }
 
-  toJSON() {
+  override toJSON(): Record<string, any> {
+    const base = super.toJSON();
     return {
-      ...super.toJSON(),
+      ...base,
       name: this.name,
       description: this.description
     };

@@ -1,7 +1,7 @@
 export abstract class BaseModel {
   id: string;
 
-  protected toJSON() {
+  toJSON(): Record<string, any> {
     return {
       id: this.id
     };
