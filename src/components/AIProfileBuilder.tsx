@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 interface Message {
   role: "system" | "user" | "assistant";
@@ -11,26 +12,52 @@ interface Message {
 }
 
 interface Profile {
-  skin_type: string;
-  breakout_freq: string;
-  concerns: string[];
-  notes: string;
+  skin_type: string | null;
+  breakout_freq: string | null;
+  concerns: string[] | null;
+  notes: string | null;
+  auth_user_id: string;
 }
 
 interface AIProfileBuilderProps {
   onComplete: (profile: Profile) => void;
+  auth_user_id: string;
 }
 
-const AIProfileBuilder = ({ onComplete }: AIProfileBuilderProps) => {
+const AIProfileBuilder = ({ onComplete, auth_user_id }: AIProfileBuilderProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [profile, setProfile] = useState<Partial<Profile>>({});
+  const [profile, setProfile] = useState<Profile>({
+    skin_type: null,
+    breakout_freq: null,
+    concerns: null,
+    notes: null,
+    auth_user_id
+  });
 
   useEffect(() => {
-    setMessages([{
-      role: "system",
-      content: `
+    const loadExistingProfile = async () => {
+      try {
+        const { data: profileData, error } = await supabase
+          .from("user_profiles")
+          .select("skin_type, breakout_freq, concerns, notes")
+          .eq("auth_user_id", auth_user_id)
+          .single();
+
+        if (error) throw error;
+
+        if (profileData) {
+          setProfile(prev => ({ ...prev, ...profileData }));
+        }
+
+        // Initialize chat with appropriate starting question
+        const nextField = getNextField(profileData || profile);
+        const initialQuestion = getQuestionForField(nextField);
+
+        setMessages([{
+          role: "system",
+          content: `
 You are a dermatology-trained AI whose sole job is to build the user's profile 
 by asking questions. The profile has these fields:
 • skin_type (e.g. "oily", "dry", "combination")
@@ -45,73 +72,121 @@ by asking questions. The profile has these fields:
    Don't do anything else.
 
 Respond conversationally, ask follow-ups to clarify if needed.
-      `.trim(),
-    }, {
-      role: "assistant",
-      content: "Hi! I'm here to help create your personalized skincare profile. Let's start with your skin type. Would you say your skin is oily, dry, combination, or normal?"
-    }]);
-  }, []);
+          `.trim(),
+        }, {
+          role: "assistant",
+          content: initialQuestion
+        }]);
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    };
+
+    loadExistingProfile();
+  }, [auth_user_id]);
+
+  const getNextField = (currentProfile: Partial<Profile>): keyof Profile | null => {
+    if (!currentProfile.skin_type) return 'skin_type';
+    if (!currentProfile.breakout_freq) return 'breakout_freq';
+    if (!currentProfile.concerns) return 'concerns';
+    if (!currentProfile.notes) return 'notes';
+    return null;
+  };
+
+  const getQuestionForField = (field: keyof Profile | null): string => {
+    switch (field) {
+      case 'skin_type':
+        return "Hi! I'm here to help create your personalized skincare profile. Let's start with your skin type. Would you say your skin is oily, dry, combination, or normal?";
+      case 'breakout_freq':
+        return "How often do you experience breakouts? (Never, monthly, weekly, or daily?)";
+      case 'concerns':
+        return "What are your main skin concerns? For example: sensitivity, hyperpigmentation, aging, acne, etc. You can list multiple concerns.";
+      case 'notes':
+        return "Would you like to add any additional notes about your skin? If not, just type 'done'.";
+      default:
+        return "Perfect! Type 'done' to complete your profile.";
+    }
+  };
+
+  const updateProfileField = async (field: keyof Profile, value: any) => {
+    try {
+      const { error } = await supabase
+        .from("user_profiles")
+        .upsert({ 
+          auth_user_id,
+          [field]: value 
+        }, { 
+          onConflict: 'auth_user_id'
+        });
+
+      if (error) throw error;
+
+      setProfile(prev => ({ ...prev, [field]: value }));
+    } catch (error) {
+      console.error(`Error updating ${field}:`, error);
+      throw error;
+    }
+  };
 
   const processAIResponse = async (userInput: string) => {
-    // This is where you would make the actual API call to your AI service
-    // For now, we'll simulate the AI logic
-    
     const userInputLower = userInput.toLowerCase();
+    const nextField = getNextField(profile);
     
     // Check if user wants to end the conversation
     if (userInputLower === 'end' || userInputLower === 'done') {
-      if (!profile.skin_type || !profile.breakout_freq || !profile.concerns) {
+      if (nextField) {
         return "We still need some information to complete your profile. " + 
-               (!profile.skin_type ? "What's your skin type? " : "") +
-               (!profile.breakout_freq ? "How often do you experience breakouts? " : "") +
-               (!profile.concerns ? "What are your main skin concerns? " : "");
+               getQuestionForField(nextField);
       }
       
-      // Complete the profile and finish
-      const finalProfile: Profile = {
-        skin_type: profile.skin_type || '',
-        breakout_freq: profile.breakout_freq || '',
-        concerns: profile.concerns || [],
-        notes: profile.notes || ''
-      };
-      
-      onComplete(finalProfile);
+      onComplete(profile);
       return "Great! I've completed your profile. You'll now be directed to your personalized routine.";
     }
 
     // Process the response based on what information we're missing
-    if (!profile.skin_type) {
-      const skinTypes = ['oily', 'dry', 'combination', 'normal'];
-      if (skinTypes.some(type => userInputLower.includes(type))) {
-        setProfile(prev => ({ ...prev, skin_type: userInputLower }));
-        return "Thanks! Now, how often do you experience breakouts? (Never, monthly, weekly, or daily?)";
+    try {
+      switch (nextField) {
+        case 'skin_type': {
+          const skinTypes = ['oily', 'dry', 'combination', 'normal'];
+          if (skinTypes.some(type => userInputLower.includes(type))) {
+            await updateProfileField('skin_type', userInputLower);
+            return getQuestionForField('breakout_freq');
+          }
+          return "I'm not quite sure about your skin type. Could you specify if it's oily, dry, combination, or normal?";
+        }
+
+        case 'breakout_freq': {
+          const freqTerms = ['never', 'monthly', 'weekly', 'daily'];
+          if (freqTerms.some(freq => userInputLower.includes(freq))) {
+            await updateProfileField('breakout_freq', userInputLower);
+            return getQuestionForField('concerns');
+          }
+          return "Could you clarify how often you experience breakouts? (Never, monthly, weekly, or daily?)";
+        }
+
+        case 'concerns': {
+          const concerns = userInput
+            .toLowerCase()
+            .split(/[,.]/)
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+          
+          await updateProfileField('concerns', concerns);
+          return getQuestionForField('notes');
+        }
+
+        case 'notes': {
+          await updateProfileField('notes', userInput);
+          return "Thanks for the additional information! Type 'done' when you're ready to complete your profile.";
+        }
+
+        default:
+          return "Perfect! Type 'done' to complete your profile.";
       }
-      return "I'm not quite sure about your skin type. Could you specify if it's oily, dry, combination, or normal?";
+    } catch (error) {
+      console.error('Error processing response:', error);
+      return "I encountered an error saving your response. Could you please try again?";
     }
-
-    if (!profile.breakout_freq) {
-      const freqTerms = ['never', 'monthly', 'weekly', 'daily'];
-      if (freqTerms.some(freq => userInputLower.includes(freq))) {
-        setProfile(prev => ({ ...prev, breakout_freq: userInputLower }));
-        return "Got it! What are your main skin concerns? For example: sensitivity, hyperpigmentation, aging, acne, etc. You can list multiple concerns.";
-      }
-      return "Could you clarify how often you experience breakouts? (Never, monthly, weekly, or daily?)";
-    }
-
-    if (!profile.concerns) {
-      const concerns = userInput
-        .toLowerCase()
-        .split(/[,.]/)
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
-      
-      setProfile(prev => ({ ...prev, concerns, notes: '' }));
-      return "Perfect! I have all the information needed. You can type 'done' to complete your profile, or add any additional notes about your skin.";
-    }
-
-    // If we have all main fields, treat input as notes
-    setProfile(prev => ({ ...prev, notes: userInput }));
-    return "Thanks for the additional information! Type 'done' when you're ready to complete your profile.";
   };
 
   const handleSendMessage = async () => {
