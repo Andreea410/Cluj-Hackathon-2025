@@ -1,5 +1,5 @@
-import { AgentLogService } from '../services/agent-log.service';
 import { AgentLog } from '../models/agent-log.model';
+import { AgentLogService } from '../services/agent-log.service';
 export declare class AgentLogController {
     private readonly agentLogService;
     constructor(agentLogService: AgentLogService);
