@@ -8,6 +8,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var UserService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
@@ -16,11 +19,13 @@ const base_service_1 = require("./base.service");
 const user_model_1 = require("../models/user.model");
 const user_repository_1 = require("../repositories/user.repository");
 const role_model_1 = require("../models/role.model");
+const supabase_js_1 = require("@supabase/supabase-js");
 const bcrypt = require("bcrypt");
 let UserService = UserService_1 = class UserService extends base_service_1.BaseService {
-    constructor(userRepository) {
+    constructor(userRepository, supabase) {
         super(userRepository);
         this.userRepository = userRepository;
+        this.supabase = supabase;
         this.logger = new common_1.Logger(UserService_1.name);
     }
     validateUserData(userData) {
@@ -88,46 +93,67 @@ let UserService = UserService_1 = class UserService extends base_service_1.BaseS
     async createUser(userData) {
         try {
             const { role_id, ...cleanUserData } = userData;
+            console.log('[createUser] Incoming data:', { ...cleanUserData, password: '[REDACTED]' });
             this.logger.debug(`Creating user with data: ${JSON.stringify({ ...cleanUserData, password: '[REDACTED]' })}`);
             this.validateUserData(cleanUserData);
             this.logger.debug('User data validation passed');
+            console.log('[createUser] Validation passed');
             const existingUser = await this.userRepository.findByEmail(cleanUserData.email);
             if (existingUser) {
                 this.logger.warn(`User with email ${cleanUserData.email} already exists`);
+                console.log('[createUser] User already exists in DB');
                 throw new common_1.BadRequestException('A user with this email already exists');
             }
             this.logger.debug('No existing user found with this email');
-            this.logger.debug('Getting or creating default role...');
+            console.log('[createUser] No existing user found');
             const roleId = await this.ensureDefaultRole();
             if (!roleId) {
+                console.log('[createUser] No roleId found');
                 throw new common_1.BadRequestException('Failed to get or create user role');
             }
             this.logger.debug(`Using role ID: ${roleId}`);
-            this.logger.debug('Hashing password...');
-            const salt = await bcrypt.genSalt();
-            const hashed_password = await bcrypt.hash(cleanUserData.password, salt);
-            this.logger.debug('Password hashed successfully');
-            this.logger.debug('Creating user instance...');
-            const user = new user_model_1.User({
+            console.log('[createUser] Registering with Supabase Auth...');
+            const { data, error } = await this.supabase.auth.signUp({
                 email: cleanUserData.email,
                 password: cleanUserData.password,
-                hashed_password,
+                options: {
+                    data: {
+                        first_name: cleanUserData.first_name,
+                        last_name: cleanUserData.last_name,
+                    }
+                }
+            });
+            if (error) {
+                this.logger.error('Supabase Auth error:', error);
+                console.log('[createUser] Supabase Auth error:', error);
+                throw new common_1.BadRequestException(error.message || JSON.stringify(error));
+            }
+            if (!data.user) {
+                console.log('[createUser] Supabase Auth did not return a user:', data);
+                throw new common_1.BadRequestException('Supabase Auth did not return a user');
+            }
+            console.log('[createUser] Supabase Auth user created:', data.user.id);
+            const user = new user_model_1.User({
+                id: data.user.id,
+                email: cleanUserData.email,
                 first_name: cleanUserData.first_name,
                 last_name: cleanUserData.last_name,
                 role_id: roleId
             });
-            this.logger.debug(`Created user instance: ${JSON.stringify(user.toJSON())}`);
-            this.logger.debug('Saving user to database...');
+            console.log('[createUser] Inserting user into users table:', user);
             const createdUser = await this.create(user);
             if (!createdUser || !createdUser.id) {
                 this.logger.error('User creation succeeded but no user ID was returned');
+                console.log('[createUser] User creation succeeded but no user ID was returned');
                 throw new Error('User creation succeeded but no user ID was returned');
             }
             this.logger.debug(`User created successfully with ID: ${createdUser.id}`);
+            console.log('[createUser] User created successfully with ID:', createdUser.id);
             return createdUser;
         }
         catch (error) {
             this.logger.error('Error creating user:', error);
+            console.log('[createUser] Caught error:', error);
             if (error instanceof common_1.BadRequestException) {
                 throw error;
             }
@@ -171,6 +197,8 @@ let UserService = UserService_1 = class UserService extends base_service_1.BaseS
 exports.UserService = UserService;
 exports.UserService = UserService = UserService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [user_repository_1.UserRepository])
+    __param(1, (0, common_1.Inject)(supabase_js_1.SupabaseClient)),
+    __metadata("design:paramtypes", [user_repository_1.UserRepository,
+        supabase_js_1.SupabaseClient])
 ], UserService);
 //# sourceMappingURL=user.service.js.map

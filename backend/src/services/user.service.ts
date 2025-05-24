@@ -1,15 +1,19 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { BaseService } from './base.service';
 import { User } from '../models/user.model';
 import { UserRepository } from '../repositories/user.repository';
 import { Role } from '../models/role.model';
+import { SupabaseClient } from '@supabase/supabase-js';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService extends BaseService<User> {
   private readonly logger = new Logger(UserService.name);
 
-  constructor(private readonly userRepository: UserRepository) {
+  constructor(
+    private readonly userRepository: UserRepository,
+    @Inject(SupabaseClient) private readonly supabase: SupabaseClient
+  ) {
     super(userRepository);
   }
 
@@ -94,61 +98,69 @@ export class UserService extends BaseService<User> {
 
   async createUser(userData: Partial<User> & { password: string }): Promise<User> {
     try {
-      // Remove any role_id from the input data
       const { role_id, ...cleanUserData } = userData;
-      
+      console.log('[createUser] Incoming data:', { ...cleanUserData, password: '[REDACTED]' });
       this.logger.debug(`Creating user with data: ${JSON.stringify({ ...cleanUserData, password: '[REDACTED]' })}`);
-
-      // Validate user data
       this.validateUserData(cleanUserData);
       this.logger.debug('User data validation passed');
-
+      console.log('[createUser] Validation passed');
       const existingUser = await this.userRepository.findByEmail(cleanUserData.email);
       if (existingUser) {
         this.logger.warn(`User with email ${cleanUserData.email} already exists`);
+        console.log('[createUser] User already exists in DB');
         throw new BadRequestException('A user with this email already exists');
       }
       this.logger.debug('No existing user found with this email');
-
-      // Get or create the default role
-      this.logger.debug('Getting or creating default role...');
+      console.log('[createUser] No existing user found');
       const roleId = await this.ensureDefaultRole();
       if (!roleId) {
+        console.log('[createUser] No roleId found');
         throw new BadRequestException('Failed to get or create user role');
       }
       this.logger.debug(`Using role ID: ${roleId}`);
-
-      // Hash the password
-      this.logger.debug('Hashing password...');
-      const salt = await bcrypt.genSalt();
-      const hashed_password = await bcrypt.hash(cleanUserData.password, salt);
-      this.logger.debug('Password hashed successfully');
-
-      // Create a new user instance with the hashed password
-      this.logger.debug('Creating user instance...');
-      const user = new User({
+      console.log('[createUser] Registering with Supabase Auth...');
+      // Register with Supabase Auth
+      const { data, error } = await this.supabase.auth.signUp({
         email: cleanUserData.email,
-        password: cleanUserData.password, // This will be removed by the User constructor
-        hashed_password,
+        password: cleanUserData.password,
+        options: {
+          data: {
+            first_name: cleanUserData.first_name,
+            last_name: cleanUserData.last_name,
+          }
+        }
+      });
+      if (error) {
+        this.logger.error('Supabase Auth error:', error);
+        console.log('[createUser] Supabase Auth error:', error);
+        throw new BadRequestException(error.message || JSON.stringify(error));
+      }
+      if (!data.user) {
+        console.log('[createUser] Supabase Auth did not return a user:', data);
+        throw new BadRequestException('Supabase Auth did not return a user');
+      }
+      console.log('[createUser] Supabase Auth user created:', data.user.id);
+      // Insert into users table
+      const user = new User({
+        id: data.user.id,
+        email: cleanUserData.email,
         first_name: cleanUserData.first_name,
         last_name: cleanUserData.last_name,
         role_id: roleId
       });
-
-      this.logger.debug(`Created user instance: ${JSON.stringify(user.toJSON())}`);
-      
-      this.logger.debug('Saving user to database...');
+      console.log('[createUser] Inserting user into users table:', user);
       const createdUser = await this.create(user);
-      
       if (!createdUser || !createdUser.id) {
         this.logger.error('User creation succeeded but no user ID was returned');
+        console.log('[createUser] User creation succeeded but no user ID was returned');
         throw new Error('User creation succeeded but no user ID was returned');
       }
-      
       this.logger.debug(`User created successfully with ID: ${createdUser.id}`);
+      console.log('[createUser] User created successfully with ID:', createdUser.id);
       return createdUser;
     } catch (error) {
       this.logger.error('Error creating user:', error);
+      console.log('[createUser] Caught error:', error);
       if (error instanceof BadRequestException) {
         throw error;
       }

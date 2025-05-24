@@ -25,7 +25,7 @@ exports.UserModule = UserModule = __decorate([
             {
                 provide: supabase_js_1.SupabaseClient,
                 useFactory: () => {
-                    return new supabase_js_1.SupabaseClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+                    return (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
                 },
             },
         ],
