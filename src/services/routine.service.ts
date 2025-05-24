@@ -55,7 +55,20 @@ export const routineService = {
 
   async getRoutineStats(userId: string) {
     try {
-      const response = await api.get(`/user-routine-logs/stats/${userId}`);
+      // First get the user's active routines
+      const activeRoutines = await this.getActiveRoutines(userId);
+      
+      if (!activeRoutines || activeRoutines.length === 0) {
+        // Return default stats if no active routine is found
+        return {
+          totalPoints: 0,
+          logs: [],
+          streak: 0
+        };
+      }
+
+      // Get stats for the first active routine
+      const response = await api.get(`/user-routine-logs/stats/${activeRoutines[0].id}`);
       return response.data;
     } catch (error) {
       console.error('Error getting routine stats:', error);
