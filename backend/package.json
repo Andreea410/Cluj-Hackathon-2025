@@ -1,0 +1,10 @@
+{
+  "name": "skincare-backend",
+  "version": "1.0.0",
+  "description": "Backend for the skincare application",
+  "main": "src/main.ts",
+  "dependencies": {
+    "@nestjs/common": "^10.3.3",
+    "@nestjs/core": "^10.3.3"
+  }
+} 
