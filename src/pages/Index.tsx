@@ -8,7 +8,6 @@ import AIProfileBuilder from '@/components/AIProfileBuilder';
 import ProductRecommendations from '@/components/ProductRecommendations';
 import RoutineTracker from '@/components/RoutineTracker';
 import PricingPlans from '@/components/PricingPlans';
-import { supabase } from '@/lib/supabaseClient';
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState('welcome');
@@ -19,23 +18,6 @@ const Index = () => {
     sensitivity: 'low'
   });
   const [points, setPoints] = useState<number>(0);
-  const [authUserId, setAuthUserId] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Check for authenticated user
-    const checkAuth = async () => {
-      const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) {
-        console.error('Error getting user:', error);
-        return;
-      }
-      if (user) {
-        setAuthUserId(user.id);
-      }
-    };
-
-    checkAuth();
-  }, []);
 
   useEffect(() => {
     console.log('Current step:', currentStep);
@@ -74,16 +56,7 @@ const Index = () => {
       case 'registration':
         return <RegistrationForm onComplete={handleRegistration} />;
       case 'skinAnalysis':
-        if (!authUserId) {
-          console.error('No authenticated user found');
-          return <div>Please log in to continue</div>;
-        }
-        return (
-          <AIProfileBuilder 
-            onComplete={handleSkinAnalysis} 
-            auth_user_id={authUserId}
-          />
-        );
+        return <AIProfileBuilder onComplete={handleSkinAnalysis} />;
       case 'routine':
         console.log('Rendering routine with:', {
           points,
