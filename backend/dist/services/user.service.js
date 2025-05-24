@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
 const common_1 = require("@nestjs/common");
 const base_service_1 = require("./base.service");
+const user_model_1 = require("../models/user.model");
 const user_repository_1 = require("../repositories/user.repository");
 const bcrypt = require("bcrypt");
 let UserService = class UserService extends base_service_1.BaseService {
@@ -19,15 +20,22 @@ let UserService = class UserService extends base_service_1.BaseService {
         super(userRepository);
         this.userRepository = userRepository;
     }
-    async createUser(user) {
-        const existingUser = await this.userRepository.findByEmail(user.email);
+    async createUser(userData) {
+        const existingUser = await this.userRepository.findByEmail(userData.email);
         if (existingUser) {
             throw new Error('A user with this email already exists');
         }
-        const salt = await bcrypt.genSalt();
-        user.hashed_password = await bcrypt.hash(user.hashed_password, salt);
-        if (!user.created_at) {
-            user.created_at = new Date();
+        const user = new user_model_1.User({
+            ...userData,
+            created_at: new Date(),
+            role_id: userData.role_id || 'user'
+        });
+        if (user.hashed_password) {
+            const salt = await bcrypt.genSalt();
+            user.hashed_password = await bcrypt.hash(userData.hashed_password, salt);
+        }
+        else {
+            throw new Error('Password is required');
         }
         return this.create(user);
     }

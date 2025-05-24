@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000'; // Adjust this to match your backend URL
+const API_URL = 'http://localhost:3000/api';
 
 export const api = {
   async register(userData: {
@@ -11,8 +11,10 @@ export const api = {
   }) {
     const response = await axios.post(`${API_URL}/users`, {
       email: userData.email,
-      hashed_password: userData.password, // The backend will hash this
-      role_id: 'user', // You might want to adjust this based on your role system
+      password: userData.password,
+      first_name: userData.firstName,
+      last_name: userData.lastName,
+      role_id: 'user'
     });
     return response.data;
   },

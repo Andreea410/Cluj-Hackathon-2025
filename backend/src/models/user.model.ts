@@ -6,6 +6,8 @@ export class User extends BaseModel {
   hashed_password: string;
   role_id: string;
   created_at: Date;
+  first_name: string;
+  last_name: string;
   role?: Role; // Optional property for when role is included
 
   constructor(partial: Partial<User>) {
@@ -23,6 +25,8 @@ export class User extends BaseModel {
       hashed_password: this.hashed_password,
       role_id: this.role_id,
       created_at: this.created_at,
+      first_name: this.first_name,
+      last_name: this.last_name,
       ...(this.role && { role: this.role.toJSON() })
     };
   }
@@ -34,6 +38,8 @@ export class User extends BaseModel {
       hashed_password: json.hashed_password,
       role_id: json.role_id,
       created_at: json.created_at,
+      first_name: json.first_name,
+      last_name: json.last_name,
       ...(json.role && { role: Role.fromJSON(json.role) })
     });
   }

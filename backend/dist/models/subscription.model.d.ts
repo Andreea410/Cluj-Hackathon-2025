@@ -26,6 +26,8 @@ export declare class Subscription extends BaseModel {
             hashed_password: string;
             role_id: string;
             created_at: Date;
+            first_name: string;
+            last_name: string;
         };
         user_id: string;
         plan_id: string;

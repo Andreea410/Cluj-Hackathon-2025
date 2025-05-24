@@ -27,6 +27,8 @@ export declare class UserResponse extends BaseModel {
             hashed_password: string;
             role_id: string;
             created_at: Date;
+            first_name: string;
+            last_name: string;
         };
         user_id: string;
         question_id: string;

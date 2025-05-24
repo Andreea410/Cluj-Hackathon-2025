@@ -24,6 +24,8 @@ export declare class UserReward extends BaseModel {
             hashed_password: string;
             role_id: string;
             created_at: Date;
+            first_name: string;
+            last_name: string;
         };
         user_id: string;
         reward_id: string;

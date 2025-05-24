@@ -5,6 +5,8 @@ export declare class User extends BaseModel {
     hashed_password: string;
     role_id: string;
     created_at: Date;
+    first_name: string;
+    last_name: string;
     role?: Role;
     constructor(partial: Partial<User>);
     toJSON(): {
@@ -16,6 +18,8 @@ export declare class User extends BaseModel {
         hashed_password: string;
         role_id: string;
         created_at: Date;
+        first_name: string;
+        last_name: string;
     };
     static fromJSON(json: any): User;
 }
