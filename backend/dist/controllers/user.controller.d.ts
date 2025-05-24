@@ -3,7 +3,9 @@ import { User } from '../models/user.model';
 export declare class UserController {
     private readonly userService;
     constructor(userService: UserService);
-    createUser(user: User): Promise<User>;
+    createUser(user: Partial<User> & {
+        password: string;
+    }): Promise<User>;
     getUser(id: string, includeRole?: boolean): Promise<User>;
     getAllUsers(roleId?: string, includeRoles?: boolean): Promise<User[]>;
     updateUser(id: string, user: Partial<User>): Promise<User>;

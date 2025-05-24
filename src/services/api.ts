@@ -14,7 +14,7 @@ export const api = {
       password: userData.password,
       first_name: userData.firstName,
       last_name: userData.lastName,
-      role_id: 'user'
+      role_id: 'user',
     });
     return response.data;
   },

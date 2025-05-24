@@ -6,7 +6,8 @@ const role_model_1 = require("./role.model");
 class User extends base_model_1.BaseModel {
     constructor(partial) {
         super();
-        Object.assign(this, partial);
+        const { password, ...userData } = partial;
+        Object.assign(this, userData);
         if (partial.created_at) {
             this.created_at = new Date(partial.created_at);
         }

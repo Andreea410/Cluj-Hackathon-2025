@@ -7,7 +7,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  async createUser(@Body() user: User): Promise<User> {
+  async createUser(@Body() user: Partial<User> & { password: string }): Promise<User> {
     try {
       return await this.userService.createUser(user);
     } catch (error) {

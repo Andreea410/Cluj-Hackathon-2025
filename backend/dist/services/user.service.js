@@ -25,18 +25,14 @@ let UserService = class UserService extends base_service_1.BaseService {
         if (existingUser) {
             throw new Error('A user with this email already exists');
         }
+        const salt = await bcrypt.genSalt();
+        const hashed_password = await bcrypt.hash(userData.password, salt);
         const user = new user_model_1.User({
             ...userData,
+            hashed_password,
             created_at: new Date(),
             role_id: userData.role_id || 'user'
         });
-        if (user.hashed_password) {
-            const salt = await bcrypt.genSalt();
-            user.hashed_password = await bcrypt.hash(userData.hashed_password, salt);
-        }
-        else {
-            throw new Error('Password is required');
-        }
         return this.create(user);
     }
     async updateUser(id, user) {

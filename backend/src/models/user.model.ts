@@ -10,9 +10,11 @@ export class User extends BaseModel {
   last_name: string;
   role?: Role; // Optional property for when role is included
 
-  constructor(partial: Partial<User>) {
+  constructor(partial: Partial<User> & { password?: string }) {
     super();
-    Object.assign(this, partial);
+    // Remove password if it exists in the input
+    const { password, ...userData } = partial;
+    Object.assign(this, userData);
     if (partial.created_at) {
       this.created_at = new Date(partial.created_at);
     }

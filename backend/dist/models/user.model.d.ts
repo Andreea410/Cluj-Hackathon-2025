@@ -8,7 +8,9 @@ export declare class User extends BaseModel {
     first_name: string;
     last_name: string;
     role?: Role;
-    constructor(partial: Partial<User>);
+    constructor(partial: Partial<User> & {
+        password?: string;
+    });
     toJSON(): {
         role: {
             name: string;

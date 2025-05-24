@@ -4,7 +4,9 @@ import { UserRepository } from '../repositories/user.repository';
 export declare class UserService extends BaseService<User> {
     private readonly userRepository;
     constructor(userRepository: UserRepository);
-    createUser(userData: Partial<User>): Promise<User>;
+    createUser(userData: Partial<User> & {
+        password: string;
+    }): Promise<User>;
     updateUser(id: string, user: Partial<User>): Promise<User>;
     findByEmail(email: string): Promise<User | null>;
     findByRoleId(roleId: string): Promise<User[]>;

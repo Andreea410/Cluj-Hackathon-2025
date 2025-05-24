@@ -10,26 +10,23 @@ export class UserService extends BaseService<User> {
     super(userRepository);
   }
 
-  async createUser(userData: Partial<User>): Promise<User> {
+  async createUser(userData: Partial<User> & { password: string }): Promise<User> {
     const existingUser = await this.userRepository.findByEmail(userData.email);
     if (existingUser) {
       throw new Error('A user with this email already exists');
     }
 
-    // Create a new user instance
+    // Hash the password first
+    const salt = await bcrypt.genSalt();
+    const hashed_password = await bcrypt.hash(userData.password, salt);
+
+    // Create a new user instance with the hashed password
     const user = new User({
       ...userData,
+      hashed_password,
       created_at: new Date(),
       role_id: userData.role_id || 'user' // Default role if not provided
     });
-
-    // Hash the password if provided
-    if (user.hashed_password) {
-      const salt = await bcrypt.genSalt();
-      user.hashed_password = await bcrypt.hash(userData.hashed_password, salt);
-    } else {
-      throw new Error('Password is required');
-    }
 
     return this.create(user);
   }
