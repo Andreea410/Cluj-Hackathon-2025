@@ -1,11 +1,10 @@
 import { BaseModel } from './base.model';
 
-export class Brand extends BaseModel {
+export class RoutineTemplate extends BaseModel {
   name: string;
-  website: string;
-  logo_url: string;
+  description: string;
 
-  constructor(partial: Partial<Brand>) {
+  constructor(partial: Partial<RoutineTemplate>) {
     super();
     Object.assign(this, partial);
   }
@@ -15,17 +14,15 @@ export class Brand extends BaseModel {
     return {
       ...base,
       name: this.name,
-      website: this.website,
-      logo_url: this.logo_url
+      description: this.description
     };
   }
 
-  static fromJSON(json: any): Brand {
-    return new Brand({
+  static fromJSON(json: any): RoutineTemplate {
+    return new RoutineTemplate({
       id: json.id,
       name: json.name,
-      website: json.website,
-      logo_url: json.logo_url
+      description: json.description
     });
   }
 } 

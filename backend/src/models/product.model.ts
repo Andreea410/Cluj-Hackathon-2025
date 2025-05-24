@@ -13,9 +13,10 @@ export class Product extends BaseModel {
     Object.assign(this, partial);
   }
 
-  toJSON() {
+  override toJSON(): Record<string, any> {
+    const base = super.toJSON();
     return {
-      ...super.toJSON(),
+      ...base,
       name: this.name,
       brand_id: this.brand_id,
       price: this.price,

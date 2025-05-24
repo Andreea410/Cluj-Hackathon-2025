@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { Star, Shield, Zap, Camera, Calendar, Gift } from 'lucide-react';
 import RegistrationForm from '@/components/RegistrationForm';
 import AIProfileBuilder from '@/components/AIProfileBuilder';
-import ProductRecommendations from '@/components/ProductRecommendations';
 import RoutineTracker from '@/components/RoutineTracker';
 import PricingPlans from '@/components/PricingPlans';
 

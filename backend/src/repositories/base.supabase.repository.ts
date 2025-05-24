@@ -3,11 +3,16 @@ import { BaseModel } from '../models/base.model';
 import { IBaseRepository } from './interfaces/base.repository.interface';
 import { DatabaseError } from '../shared/exceptions/database.error';
 
+type ModelConstructor<T> = {
+  new (partial: Partial<T>): T;
+  fromJSON(json: any): T;
+};
+
 export abstract class BaseSupabaseRepository<T extends BaseModel> implements IBaseRepository<T> {
   protected constructor(
     protected readonly supabase: SupabaseClient,
     protected readonly tableName: string,
-    protected readonly modelConstructor: new (partial: Partial<T>) => T
+    protected readonly modelConstructor: ModelConstructor<T>
   ) {}
 
   async create(entity: T): Promise<T> {

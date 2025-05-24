@@ -12,9 +12,10 @@ export class DiaryEntry extends BaseModel {
     Object.assign(this, partial);
   }
 
-  toJSON() {
+  override toJSON(): Record<string, any> {
+    const base = super.toJSON();
     return {
-      ...super.toJSON(),
+      ...base,
       user_id: this.user_id,
       date: this.date,
       image_url: this.image_url,
