@@ -22,13 +22,9 @@ let UserController = class UserController {
         this.supabase = supabase;
         console.log('UserController initialized');
     }
-    async createUser(user) {
-        try {
-            return await this.userService.createUser(user);
-        }
-        catch (error) {
-            throw new common_1.HttpException(error.message, common_1.HttpStatus.BAD_REQUEST);
-        }
+    ping() {
+        console.log('Ping route hit!');
+        return { message: 'pong' };
     }
     testRoute() {
         console.log('Test route hit!');
@@ -57,7 +53,7 @@ let UserController = class UserController {
             console.log('[STEP 4] Checking user_routines for user...');
             const { data: userRoutines, error: userRoutinesError } = await this.supabase
                 .from('user_routines')
-                .select('id, user_id, routine_template_id, created_at')
+                .select('id, user_id, routine_template_id')
                 .eq('user_id', userId);
             console.log('[STEP 4.1] user_routines query result:', { userRoutines, userRoutinesError });
             if (userRoutinesError) {
@@ -86,7 +82,7 @@ let UserController = class UserController {
             console.log('[STEP 6] Getting products for template:', userRoutine.routine_template_id);
             const { data: products, error: productsError } = await this.supabase
                 .from('routine_template_products')
-                .select('id, routine_template_id, product_id, products (id, name, photo_url, time)')
+                .select('id, routine_template_id, product_id, products (id, name, photo_url)')
                 .eq('routine_template_id', userRoutine.routine_template_id);
             console.log('[STEP 6.1] Raw products response:', products);
             if (productsError) {
@@ -171,12 +167,11 @@ let UserController = class UserController {
 };
 exports.UserController = UserController;
 __decorate([
-    (0, common_1.Post)(),
-    __param(0, (0, common_1.Body)()),
+    (0, common_1.Get)('ping'),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], UserController.prototype, "createUser", null);
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], UserController.prototype, "ping", null);
 __decorate([
     (0, common_1.Get)('test'),
     __metadata("design:type", Function),

@@ -343,7 +343,6 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
                       <div>
                         <p className="font-medium">{step.step}</p>
                         {step.time && <p className="text-sm text-gray-600">{step.time}</p>}
-                        {step.photo_url && <img src={step.photo_url} alt={step.step} className="w-8 h-8 rounded-full mt-1" />}
                       </div>
                     </div>
                   </div>

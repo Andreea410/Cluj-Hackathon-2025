@@ -38,14 +38,11 @@ export class UserController {
   ) {
     console.log('UserController initialized');
   }
-
-  @Post()
-  async createUser(@Body() user: Partial<User> & { password: string }): Promise<User> {
-    try {
-      return await this.userService.createUser(user);
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    }
+  
+  @Get('ping')
+  ping() {
+    console.log('Ping route hit!');
+    return { message: 'pong' };
   }
 
   @Get('test')
@@ -60,7 +57,6 @@ export class UserController {
     console.log('[STEP 1] Received request for user ID:', userId);
     console.log('[STEP 2] Timestamp:', new Date().toISOString());
     try {
-      // Step 3: Check if the user exists
       console.log('[STEP 3] Checking if user exists...');
       const { data: user, error: userError } = await this.supabase
         .from('users')
@@ -80,7 +76,7 @@ export class UserController {
       console.log('[STEP 4] Checking user_routines for user...');
       const { data: userRoutines, error: userRoutinesError } = await this.supabase
         .from('user_routines')
-        .select('id, user_id, routine_template_id, created_at')
+        .select('id, user_id, routine_template_id')
         .eq('user_id', userId);
       console.log('[STEP 4.1] user_routines query result:', { userRoutines, userRoutinesError });
       if (userRoutinesError) {
@@ -111,7 +107,7 @@ export class UserController {
       console.log('[STEP 6] Getting products for template:', userRoutine.routine_template_id);
       const { data: products, error: productsError } = await this.supabase
         .from('routine_template_products')
-        .select('id, routine_template_id, product_id, products (id, name, photo_url, time)')
+        .select('id, routine_template_id, product_id, products (id, name, photo_url)')
         .eq('routine_template_id', userRoutine.routine_template_id);
       console.log('[STEP 6.1] Raw products response:', products);
       if (productsError) {
