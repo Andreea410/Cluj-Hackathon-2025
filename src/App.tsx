@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./components/AuthPage";
 import RoutineTracker from "./components/RoutineTracker";
+import PricingPlans from "./components/PricingPlans";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
             {/* Public routes */}
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<AuthPage />} />
+            <Route path="/pricing" element={<PricingPlans />} />
             
             {/* Protected routes */}
             <Route path="/dashboard" element={
