@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AgentLogService = void 0;
 const common_1 = require("@nestjs/common");
@@ -46,6 +47,6 @@ let AgentLogService = class AgentLogService extends base_service_1.BaseService {
 exports.AgentLogService = AgentLogService;
 exports.AgentLogService = AgentLogService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [agent_log_repository_1.AgentLogRepository])
+    __metadata("design:paramtypes", [typeof (_a = typeof agent_log_repository_1.AgentLogRepository !== "undefined" && agent_log_repository_1.AgentLogRepository) === "function" ? _a : Object])
 ], AgentLogService);
 //# sourceMappingURL=agent-log.service.js.map

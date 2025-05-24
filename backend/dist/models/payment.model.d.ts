@@ -7,12 +7,7 @@ export declare class Payment extends BaseModel {
     order?: Order;
     constructor(partial: Partial<Payment>);
     toJSON(): {
-        order: {
-            user_id: string;
-            total_amount: number;
-            status: string;
-            created_at: Date;
-        };
+        order: any;
         order_id: string;
         stripe_charge_id: string;
         paid_at: Date;

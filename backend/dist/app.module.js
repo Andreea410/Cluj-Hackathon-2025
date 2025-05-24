@@ -10,10 +10,6 @@ exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const user_module_1 = require("./modules/user.module");
-const payment_module_1 = require("./modules/payment.module");
-const user_response_module_1 = require("./modules/user-response.module");
-const answer_option_module_1 = require("./modules/answer-option.module");
-const point_transaction_module_1 = require("./modules/point-transaction.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -24,10 +20,6 @@ exports.AppModule = AppModule = __decorate([
                 isGlobal: true,
             }),
             user_module_1.UserModule,
-            payment_module_1.PaymentModule,
-            user_response_module_1.UserResponseModule,
-            answer_option_module_1.AnswerOptionModule,
-            point_transaction_module_1.PointTransactionModule,
         ],
     })
 ], AppModule);

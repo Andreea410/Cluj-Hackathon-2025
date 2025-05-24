@@ -12,11 +12,7 @@ export declare class UserResponse extends BaseModel {
     option?: Option;
     constructor(partial: Partial<UserResponse>);
     toJSON(): {
-        option: {
-            text: string;
-            question_id: string;
-            created_at: Date;
-        };
+        option: any;
         question: Record<string, any>;
         user: {
             role: {
