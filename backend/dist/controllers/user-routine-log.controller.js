@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var _a, _b;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserRoutineLogController = void 0;
 const common_1 = require("@nestjs/common");
@@ -116,7 +117,7 @@ __decorate([
     (0, common_1.Post)('log'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [user_routine_log_model_1.UserRoutineLog]),
+    __metadata("design:paramtypes", [typeof (_a = typeof user_routine_log_model_1.UserRoutineLog !== "undefined" && user_routine_log_model_1.UserRoutineLog) === "function" ? _a : Object]),
     __metadata("design:returntype", Promise)
 ], UserRoutineLogController.prototype, "logRoutineProgress", null);
 __decorate([
@@ -160,7 +161,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, user_routine_log_model_1.UserRoutineLog]),
+    __metadata("design:paramtypes", [String, typeof (_b = typeof user_routine_log_model_1.UserRoutineLog !== "undefined" && user_routine_log_model_1.UserRoutineLog) === "function" ? _b : Object]),
     __metadata("design:returntype", Promise)
 ], UserRoutineLogController.prototype, "updateRoutineLog", null);
 __decorate([

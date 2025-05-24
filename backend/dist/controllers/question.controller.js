@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.QuestionController = void 0;
 const common_1 = require("@nestjs/common");
@@ -85,7 +86,7 @@ __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [question_model_1.Question]),
+    __metadata("design:paramtypes", [typeof (_a = typeof question_model_1.Question !== "undefined" && question_model_1.Question) === "function" ? _a : Object]),
     __metadata("design:returntype", Promise)
 ], QuestionController.prototype, "createQuestion", null);
 __decorate([

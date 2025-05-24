@@ -8,6 +8,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PointTransactionService = void 0;
 const common_1 = require("@nestjs/common");
@@ -66,6 +67,6 @@ let PointTransactionService = class PointTransactionService extends base_service
 exports.PointTransactionService = PointTransactionService;
 exports.PointTransactionService = PointTransactionService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [point_transaction_repository_1.PointTransactionRepository])
+    __metadata("design:paramtypes", [typeof (_a = typeof point_transaction_repository_1.PointTransactionRepository !== "undefined" && point_transaction_repository_1.PointTransactionRepository) === "function" ? _a : Object])
 ], PointTransactionService);
 //# sourceMappingURL=point-transaction.service.js.map

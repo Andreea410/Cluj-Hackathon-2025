@@ -8,7 +8,7 @@ export declare class RoutineStepProduct extends BaseModel {
     product?: Product;
     constructor(partial: Partial<RoutineStepProduct>);
     toJSON(): {
-        product: Record<string, any>;
+        product: any;
         routineStep: {
             routineTemplate: Record<string, any>;
             routine_template_id: string;

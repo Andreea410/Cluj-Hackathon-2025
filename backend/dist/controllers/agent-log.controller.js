@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AgentLogController = void 0;
 const common_1 = require("@nestjs/common");
@@ -87,7 +88,7 @@ __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [agent_log_model_1.AgentLog]),
+    __metadata("design:paramtypes", [typeof (_a = typeof agent_log_model_1.AgentLog !== "undefined" && agent_log_model_1.AgentLog) === "function" ? _a : Object]),
     __metadata("design:returntype", Promise)
 ], AgentLogController.prototype, "createAgentLog", null);
 __decorate([
