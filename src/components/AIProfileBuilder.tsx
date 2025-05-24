@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send } from 'lucide-react';
+import { Send, TestTube } from 'lucide-react';
 
 interface Message {
   role: "system" | "user" | "assistant";
@@ -21,11 +21,25 @@ interface AIProfileBuilderProps {
   onComplete: (profile: Profile) => void;
 }
 
+interface FlockXMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
+interface FlockXResponse {
+  response: string;
+}
+
+const FLOCKX_API_URL = import.meta.env.VITE_FLOCKX_API_URL;
+const FLX_API_KEY = import.meta.env.VITE_FLX_API_KEY;
+const FLOCKX_TWIN_ID = import.meta.env.VITE_FLOCKX_TWIN_ID;
+
 const AIProfileBuilder = ({ onComplete }: AIProfileBuilderProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState<Partial<Profile>>({});
+  const [testResult, setTestResult] = useState<string>('');
 
   useEffect(() => {
     setMessages([{
@@ -52,10 +66,36 @@ Respond conversationally, ask follow-ups to clarify if needed.
     }]);
   }, []);
 
+  const callFlockXAPI = async (messages: Message[]) => {
+    try {
+      const response = await fetch(`${FLOCKX_API_URL}/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${FLX_API_KEY}`,
+        },
+        body: JSON.stringify({
+          twin_id: FLOCKX_TWIN_ID,
+          messages: messages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          })) as FlockXMessage[]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response from FlockX API');
+      }
+
+      const data = await response.json() as FlockXResponse;
+      return data.response;
+    } catch (error) {
+      console.error('Error calling FlockX API:', error);
+      throw error;
+    }
+  };
+
   const processAIResponse = async (userInput: string) => {
-    // This is where you would make the actual API call to your AI service
-    // For now, we'll simulate the AI logic
-    
     const userInputLower = userInput.toLowerCase();
     
     // Check if user wants to end the conversation
@@ -79,38 +119,35 @@ Respond conversationally, ask follow-ups to clarify if needed.
       return "Great! I've completed your profile. You'll now be directed to your personalized routine.";
     }
 
-    // Process the response based on what information we're missing
-    if (!profile.skin_type) {
-      const skinTypes = ['oily', 'dry', 'combination', 'normal'];
-      if (skinTypes.some(type => userInputLower.includes(type))) {
-        setProfile(prev => ({ ...prev, skin_type: userInputLower }));
-        return "Thanks! Now, how often do you experience breakouts? (Never, monthly, weekly, or daily?)";
-      }
-      return "I'm not quite sure about your skin type. Could you specify if it's oily, dry, combination, or normal?";
-    }
-
-    if (!profile.breakout_freq) {
-      const freqTerms = ['never', 'monthly', 'weekly', 'daily'];
-      if (freqTerms.some(freq => userInputLower.includes(freq))) {
-        setProfile(prev => ({ ...prev, breakout_freq: userInputLower }));
-        return "Got it! What are your main skin concerns? For example: sensitivity, hyperpigmentation, aging, acne, etc. You can list multiple concerns.";
-      }
-      return "Could you clarify how often you experience breakouts? (Never, monthly, weekly, or daily?)";
-    }
-
-    if (!profile.concerns) {
-      const concerns = userInput
-        .toLowerCase()
-        .split(/[,.]/)
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
+    // Add the user's message to the conversation
+    const userMessage: Message = { role: "user", content: userInput };
+    const updatedMessages: Message[] = [...messages, userMessage];
+    
+    try {
+      // Get response from FlockX API
+      const aiResponse = await callFlockXAPI(updatedMessages);
       
-      setProfile(prev => ({ ...prev, concerns, notes: '' }));
-      return "Perfect! I have all the information needed. You can type 'done' to complete your profile, or add any additional notes about your skin.";
-    }
+      // Update the profile based on the conversation
+      if (!profile.skin_type && userInputLower.match(/oily|dry|combination|normal/)) {
+        setProfile(prev => ({ ...prev, skin_type: userInputLower }));
+      } else if (!profile.breakout_freq && userInputLower.match(/never|monthly|weekly|daily/)) {
+        setProfile(prev => ({ ...prev, breakout_freq: userInputLower }));
+      } else if (!profile.concerns) {
+        const concerns = userInput
+          .toLowerCase()
+          .split(/[,.]/)
+          .map(s => s.trim())
+          .filter(s => s.length > 0);
+        setProfile(prev => ({ ...prev, concerns }));
+      } else {
+        setProfile(prev => ({ ...prev, notes: userInput }));
+      }
 
-    setProfile(prev => ({ ...prev, notes: userInput }));
-    return "Thanks for the additional information! Type 'done' when you're ready to complete your profile.";
+      return aiResponse;
+    } catch (error) {
+      console.error('Error processing AI response:', error);
+      return "I'm sorry, I encountered an error. Could you please try again?";
+    }
   };
 
   const handleSendMessage = async () => {
@@ -135,10 +172,49 @@ Respond conversationally, ask follow-ups to clarify if needed.
     }
   };
 
+  const testAPIConnection = async () => {
+    try {
+      setTestResult('Testing API connection...');
+      const testMessages: Message[] = [
+        {
+          role: "system",
+          content: "You are a dermatology-trained AI. Please provide a brief response."
+        },
+        {
+          role: "user",
+          content: "i have very sensitive skin, what products do you recommend"
+        }
+      ];
+      
+      console.log('API URL:', FLOCKX_API_URL);
+      console.log('Twin ID:', FLOCKX_TWIN_ID);
+      
+      const response = await callFlockXAPI(testMessages);
+      setTestResult(`API Test Successful! Response: ${response}`);
+    } catch (error) {
+      console.error('Full error:', error);
+      setTestResult(`API Test Failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur">
         <CardContent className="p-6">
+          <div className="mb-4">
+            <Button
+              onClick={testAPIConnection}
+              className="bg-blue-600 hover:bg-blue-700 mb-2"
+            >
+              <TestTube className="w-4 h-4 mr-2" />
+              Test API Connection
+            </Button>
+            {testResult && (
+              <div className="text-sm p-2 bg-gray-100 rounded">
+                {testResult}
+              </div>
+            )}
+          </div>
           <ScrollArea className="h-[400px] pr-4 mb-4">
             <div className="space-y-4">
               {messages.slice(1).map((message, index) => (

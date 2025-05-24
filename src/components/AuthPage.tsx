@@ -77,7 +77,6 @@ const AuthPage = () => {
         title: "Account created!",
         description: "Please check your email to verify your account.",
       });
-      navigate('/dashboard');
     } catch (error: any) {
       toast({
         title: "Signup failed",

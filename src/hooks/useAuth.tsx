@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import bcrypt from 'bcryptjs';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: string;
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is stored in localStorage
@@ -106,6 +108,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(userToStore);
 
       console.log('User created successfully:', userToStore);
+      
+      // Immediately navigate to profile builder
+      console.log('Navigating to profile builder...');
+      navigate('/profile-builder', { replace: true });
     } catch (error: any) {
       console.error('Signup error:', {
         message: error.message,
@@ -152,6 +158,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(userToStore);
 
       console.log('User signed in successfully:', userToStore);
+      
+      // Check if user has completed their profile
+      const userProfile = localStorage.getItem('userProfile');
+      if (!userProfile) {
+        // Redirect to AIProfileBuilder page if profile is not complete
+        console.log('User profile not found, redirecting to profile builder...');
+        navigate('/profile-builder');
+      } else {
+        // Redirect to dashboard if profile is complete
+        console.log('User profile found, redirecting to dashboard...');
+        navigate('/dashboard');
+      }
     } catch (error: any) {
       console.error('Sign in error:', {
         message: error.message,
@@ -168,6 +186,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.removeItem('user');
       setUser(null);
       console.log('User signed out successfully');
+      // Redirect to home page after sign out
+      navigate('/');
     } catch (error: any) {
       console.error('Sign out error:', {
         message: error.message,

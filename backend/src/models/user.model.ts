@@ -12,7 +12,6 @@ export class User extends BaseModel {
 
   constructor(partial: Partial<User> & { password?: string }) {
     super();
-    // Remove password if it exists in the input
     const { password, ...userData } = partial;
     Object.assign(this, userData);
   }

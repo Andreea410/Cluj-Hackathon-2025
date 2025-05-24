@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -10,16 +10,31 @@ import AuthPage from "./components/AuthPage";
 import RoutineTracker from "./components/RoutineTracker";
 import PricingPlans from "./components/PricingPlans";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AIProfileBuilder from "./components/AIProfileBuilder";
 
 const queryClient = new QueryClient();
 
+// Wrapper component to handle profile completion
+const ProfileBuilderWrapper = () => {
+  const navigate = useNavigate();
+
+  const handleProfileComplete = (profile: any) => {
+    // Store the profile in localStorage or state management
+    localStorage.setItem('userProfile', JSON.stringify(profile));
+    // Navigate to dashboard after profile completion
+    navigate('/dashboard');
+  };
+
+  return <AIProfileBuilder onComplete={handleProfileComplete} />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
           <Routes>
             {/* Public routes */}
             <Route path="/" element={<Index />} />
@@ -42,12 +57,18 @@ const App = () => (
               </ProtectedRoute>
             } />
             
+            <Route path="/profile-builder" element={
+              <ProtectedRoute>
+                <ProfileBuilderWrapper />
+              </ProtectedRoute>
+            } />
+            
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
+        </TooltipProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
