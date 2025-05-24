@@ -12,11 +12,9 @@ const PricingPlans = () => {
       period: 'forever',
       description: 'Perfect for getting started with personalized skincare',
       features: [
-        'Skin analysis questionnaire',
+        'Advanced AI skin analysis',
         'Personalized product recommendations',
-        'Morning & night routine tracking',
-        'Points and rewards system',
-        'Progress photo uploads',
+        'Exclusive product discounts',
         'Daily routine notifications'
       ],
       buttonText: 'Get Started Free',
@@ -30,12 +28,7 @@ const PricingPlans = () => {
       description: 'Advanced features with professional dermatologist support',
       features: [
         'Everything in Free plan',
-        'Monthly dermatologist consultations',
-        'Advanced AI skin analysis',
-        'Priority customer support',
-        'Exclusive product discounts',
-        'Custom routine adjustments',
-        'Weekly progress reports'
+        'Monthly dermatologist consultations'
       ],
       buttonText: 'Start Premium Trial',
       popular: true,

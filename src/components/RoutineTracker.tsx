@@ -204,7 +204,7 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
                 <h3 className="text-lg font-semibold mb-2">Upload Today's Photo</h3>
                 <p className="text-gray-600 mb-4">Take a photo of your skin to track progress</p>
                 <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white">
-                  Take Photo
+                  Upload Photo
                 </Button>
               </div>
               
