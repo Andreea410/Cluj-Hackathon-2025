@@ -1,5 +1,5 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,8 +11,15 @@ import { Loader2 } from 'lucide-react';
 
 const AuthPage = () => {
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, loading: authLoading, user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const [loginData, setLoginData] = useState({
     email: '',
@@ -36,6 +43,7 @@ const AuthPage = () => {
         title: "Welcome back!",
         description: "You've successfully logged in.",
       });
+      navigate('/dashboard');
     } catch (error: any) {
       toast({
         title: "Login failed",
@@ -69,6 +77,7 @@ const AuthPage = () => {
         title: "Account created!",
         description: "Please check your email to verify your account.",
       });
+      navigate('/dashboard');
     } catch (error: any) {
       toast({
         title: "Signup failed",
@@ -79,6 +88,18 @@ const AuthPage = () => {
       setLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md border-0 shadow-2xl bg-white/90 backdrop-blur p-8">
+          <div className="flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 flex items-center justify-center p-4">
