@@ -48,17 +48,35 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
       setMorningLoading(true);
       setMorningError(null);
       try {
-        const res = await fetch(`http://localhost:3000/api/users/${user.id}/morning-products`);
+        console.log('Fetching morning routine for user ID:', user?.id);
+
+        const url = `http://localhost:3000/api/users/${user.id}/morning-products`;
+        console.log('Making request to:', url);
+
+        const res = await fetch(url);
+        console.log('API response status:', res.status);
+        console.log('API response headers:', Object.fromEntries(res.headers.entries()));
+        
         const text = await res.text();
+        console.log('API response text:', text);
+        
         let data;
         try {
           data = JSON.parse(text);
+          console.log('Parsed response data:', data);
         } catch (jsonErr) {
+          console.error('Failed to parse JSON response:', jsonErr);
           setMorningError(`API returned non-JSON response: ${text.substring(0, 300)}`);
           setMorningLoading(false);
           return;
         }
+
         if (!res.ok) {
+          console.error('API request failed:', {
+            status: res.status,
+            statusText: res.statusText,
+            data: data
+          });
           if (res.status === 404 || data?.message?.includes('no routine')) {
             setMorningError('Please complete your profile in order to get a routine');
           } else {
@@ -67,20 +85,25 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
           setMorningLoading(false);
           return;
         }
-        if (Array.isArray(data) && data.length === 0) {
+
+        if (!Array.isArray(data) || data.length === 0) {
+          console.log('No products found in response');
           setMorningError('Please complete your profile in order to get a routine');
           setMorningLoading(false);
           return;
         }
+
+        console.log('Setting morning routine with data:', data);
         setMorningRoutine(
           data.map((product: any) => ({
             id: product.id,
             step: product.name,
-            time: product.time || '',
+            time: product.time || '1 minute',
             photo_url: product.photo_url
           }))
         );
       } catch (err: any) {
+        console.error('Error in fetchMorningRoutine:', err);
         setMorningError(err.message || 'Failed to load morning routine');
       } finally {
         setMorningLoading(false);
