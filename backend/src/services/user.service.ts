@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { BaseService } from './base.service';
 import { User } from '../models/user.model';
-import { IUserRepository } from '../repositories/interfaces/user.repository.interface';
+import { UserRepository } from '../repositories/user.repository';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService extends BaseService<User> {
-  constructor(private readonly userRepository: IUserRepository) {
+  constructor(private readonly userRepository: UserRepository) {
     super(userRepository);
   }
 

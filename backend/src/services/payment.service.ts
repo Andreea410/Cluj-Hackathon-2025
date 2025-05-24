@@ -1,19 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { BaseService } from './base.service';
 import { Payment } from '../models/payment.model';
-import { IPaymentRepository } from '../repositories/interfaces/payment.repository.interface';
+import { PaymentRepository } from '../repositories/payment.repository';
 import Stripe from 'stripe';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
-export class PaymentService extends BaseService<Payment> {
+export class PaymentService extends BaseService<Payment> implements OnModuleInit {
   private stripe: Stripe;
 
   constructor(
-    private readonly paymentRepository: IPaymentRepository,
+    private readonly paymentRepository: PaymentRepository,
+    private readonly configService: ConfigService,
   ) {
     super(paymentRepository);
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2023-10-16'
+  }
+
+  onModuleInit() {
+    const stripeKey = this.configService.get<string>('STRIPE_SECRET_KEY');
+    if (!stripeKey) {
+      throw new Error('STRIPE_SECRET_KEY is not configured');
+    }
+    this.stripe = new Stripe(stripeKey, {
+      apiVersion: '2025-04-30.basil'
     });
   }
 
