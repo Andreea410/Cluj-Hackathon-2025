@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,282 +6,75 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Sun, Moon, Gift, Camera, Calendar, Loader2, LogOut } from 'lucide-react';
-import { routineService } from '@/services/routine.service';
-import { useAuth } from '@/hooks/useAuth';
+import { Sun, Moon, Gift, Camera, Calendar, LogOut } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
-interface RoutineTrackerProps {
-  points: number;
-  setPoints: (value: number | ((prevPoints: number) => number)) => void;
-  skinAnalysis: {
-    skinType: string;
-    concerns: string[];
-    sensitivity: string;
-  };
-  userProfile: any;
-}
-
-const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: RoutineTrackerProps) => {
+const RoutineTracker = () => {
   const [morningCompleted, setMorningCompleted] = useState<string[]>([]);
-  const [nightCompleted, setNightCompleted] = useState<number[]>([]);
+  const [nightCompleted, setNightCompleted] = useState<string[]>([]);
   const [showReward, setShowReward] = useState(false);
   const [dailyPointAwarded, setDailyPointAwarded] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [morningRoutine, setMorningRoutine] = useState<any[]>([]);
-  const [morningLoading, setMorningLoading] = useState(true);
-  const [morningError, setMorningError] = useState<string | null>(null);
-  const [nightRoutine, setNightRoutine] = useState<any[]>([]);
-  const [nightLoading, setNightLoading] = useState(true);
-  const [nightError, setNightError] = useState<string | null>(null);
-  const { user, signOut } = useAuth();
+  const [points, setPoints] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchMorningRoutine = async () => {
-      if (!user?.id) return;
-      setMorningLoading(true);
-      setMorningError(null);
-      try {
-        console.log('Fetching morning routine for user ID:', user?.id);
+  // Sample routines - you can modify these as needed
+  const morningRoutine = [
+    { id: '1', step: 'Cleanser', time: '1 minute' },
+    { id: '2', step: 'Toner', time: '30 seconds' },
+    { id: '3', step: 'Serum', time: '1 minute' },
+    { id: '4', step: 'Moisturizer', time: '1 minute' },
+    { id: '5', step: 'Sunscreen', time: '1 minute' }
+  ];
 
-        const url = `http://localhost:3000/api/users/${user.id}/morning-products`;
-        console.log('Making request to:', url);
+  const nightRoutine = [
+    { id: '6', step: 'Makeup Remover', time: '1 minute' },
+    { id: '7', step: 'Cleanser', time: '1 minute' },
+    { id: '8', step: 'Toner', time: '30 seconds' },
+    { id: '9', step: 'Treatment', time: '1 minute' },
+    { id: '10', step: 'Night Cream', time: '1 minute' }
+  ];
 
-        const res = await fetch(url);
-        console.log('API response status:', res.status);
-        console.log('API response headers:', Object.fromEntries(res.headers.entries()));
-        
-        const text = await res.text();
-        console.log('API response text:', text);
-        
-        let data;
-        try {
-          data = JSON.parse(text);
-          console.log('Parsed response data:', data);
-        } catch (jsonErr) {
-          console.error('Failed to parse JSON response:', jsonErr);
-          setMorningError(`API returned non-JSON response: ${text.substring(0, 300)}`);
-          setMorningLoading(false);
-          return;
-        }
-
-        if (!res.ok) {
-          console.error('API request failed:', {
-            status: res.status,
-            statusText: res.statusText,
-            data: data
-          });
-          if (res.status === 404 || data?.message?.includes('no routine')) {
-            setMorningError('Please complete your profile in order to get a routine');
-          } else {
-            setMorningError(data?.message || 'Failed to fetch morning routine');
-          }
-          setMorningLoading(false);
-          return;
-        }
-
-        if (!Array.isArray(data) || data.length === 0) {
-          console.log('No products found in response');
-          setMorningError('Please complete your profile in order to get a routine');
-          setMorningLoading(false);
-          return;
-        }
-
-        console.log('Setting morning routine with data:', data);
-        setMorningRoutine(
-          data.map((product: any) => ({
-            id: product.id,
-            step: product.name,
-            time: product.time || '1 minute',
-            photo_url: product.photo_url
-          }))
-        );
-      } catch (err: any) {
-        console.error('Error in fetchMorningRoutine:', err);
-        setMorningError(err.message || 'Failed to load morning routine');
-      } finally {
-        setMorningLoading(false);
-      }
-    };
-    fetchMorningRoutine();
-  }, [user?.id]);
-
-  useEffect(() => {
-  const fetchNightRoutine = async () => {
-    if (!user?.id) return;
-    setNightLoading(true);
-    setNightError(null);
-    try {
-      const res = await fetch(`http://localhost:3000/api/users/${user.id}/night-products`);
-      const text = await res.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        setNightError(`API returned non-JSON response: ${text.substring(0, 300)}`);
-        return;
-      }
-      if (!res.ok) {
-        if (res.status === 404) {
-          setNightError('Please complete your profile in order to get a routine');
-        } else {
-          setNightError(data?.message || 'Failed to fetch night routine');
-        }
-        return;
-      }
-      setNightRoutine(
-        data.map((product: any) => ({
-          id: product.id,
-          step: product.name,
-          time: product.time || '1 minute',
-          photo_url: product.photo_url,
-        }))
-      );
-    } catch (err: any) {
-      setNightError(err.message || 'Failed to load night routine');
-    } finally {
-      setNightLoading(false);
+  const handleStepComplete = (stepId: string, isNight = false) => {
+    if (isNight) {
+      const newCompleted = nightCompleted.includes(stepId)
+        ? nightCompleted.filter(id => id !== stepId)
+        : [...nightCompleted, stepId];
+      setNightCompleted(newCompleted);
+    } else {
+      const newCompleted = morningCompleted.includes(stepId)
+        ? morningCompleted.filter(id => id !== stepId)
+        : [...morningCompleted, stepId];
+      setMorningCompleted(newCompleted);
     }
-  };
-  fetchNightRoutine();
-}, [user?.id]);
 
-  useEffect(() => {
-    const loadRoutineProgress = async () => {
-      if (!user?.id) return;
-      
-      try {
-        const stats = await routineService.getRoutineStats(user.id);
-        setPoints(stats.totalPoints || 0);
-        
-        // Load today's progress
-        const today = new Date().toISOString().split('T')[0];
-        const todayLog = stats.logs?.find(log => log.date.startsWith(today));
-        
-        if (todayLog) {
-          const morningIds: string[] = todayLog.steps
-            .filter((id: string | number) => typeof id === 'string' && morningRoutine.some(step => step.id === id))
-            .map(id => id as string);
-          setMorningCompleted(morningIds);
+    // Check if both routines are complete
+    const isMorningComplete = morningRoutine.every(step => 
+      isNight ? morningCompleted.includes(step.id) : [...morningCompleted, stepId].includes(step.id)
+    );
+    const isNightComplete = nightRoutine.every(step => 
+      isNight ? [...nightCompleted, stepId].includes(step.id) : nightCompleted.includes(step.id)
+    );
 
-          const nightIds: number[] = todayLog.steps
-            .filter((id: string | number) => typeof id === 'number' && id > 4)
-            .map(id => id as number);
-          setNightCompleted(nightIds);
-
-          setDailyPointAwarded(todayLog.points > 0);
-        }
-      } catch (error) {
-        console.error('Failed to load routine progress:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load your routine progress. Please try again.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    if (morningRoutine.length > 0) loadRoutineProgress();
-  }, [user?.id, morningRoutine]);
-
-  const handleStepComplete = async (stepId: string, isNight = false) => {
-    if (!user?.id) return;
-
-    try {
-      setLoading(true);
-      if (isNight) {
-        const steps = [...nightCompleted, stepId].filter((id): id is number => typeof id === 'number');
-        await routineService.logRoutineProgress(user.id, steps, isNight);
-        setNightCompleted(steps);
-        // Check if both routines are complete
-        const isMorningComplete = morningRoutine.every(step => morningCompleted.includes(step.id));
-        const isNightComplete = nightRoutine.every(step => steps.includes(step.id));
-        if (isMorningComplete && isNightComplete && !dailyPointAwarded) {
-          setPoints(prev => prev + 1);
-          setDailyPointAwarded(true);
-          toast({
-            title: "Daily Goal Achieved!",
-            description: "You've completed your daily routine and earned a point!",
-          });
-        }
-      } else {
-        const steps = [...morningCompleted, stepId].filter((id): id is string => typeof id === 'string');
-        await routineService.logRoutineProgress(user.id, steps.map((_, idx) => idx + 1), isNight);
-        setMorningCompleted(steps);
-        // Check if both routines are complete
-        const isMorningComplete = morningRoutine.every(step => steps.includes(step.id));
-        const isNightComplete = nightRoutine.every(step => nightCompleted.includes(step.id));
-        if (isMorningComplete && isNightComplete && !dailyPointAwarded) {
-          setPoints(prev => prev + 1);
-          setDailyPointAwarded(true);
-          toast({
-            title: "Daily Goal Achieved!",
-            description: "You've completed your daily routine and earned a point!",
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Failed to update routine progress:', error);
+    if (isMorningComplete && isNightComplete && !dailyPointAwarded) {
+      setPoints(prev => prev + 1);
+      setDailyPointAwarded(true);
       toast({
-        title: "Error",
-        description: "Failed to update your progress. Please try again.",
-        variant: "destructive",
+        title: "Daily Goal Achieved!",
+        description: "You've completed your daily routine and earned a point!",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user?.id || !event.target.files?.length) return;
-
-    try {
-      setLoading(true);
-      const photo = event.target.files[0];
-      await routineService.uploadProgressPhoto(user.id, photo);
-      
-      toast({
-        title: "Success",
-        description: "Progress photo uploaded successfully!",
-      });
-    } catch (error) {
-      console.error('Failed to upload photo:', error);
-      toast({
-        title: "Error",
-        description: "Failed to upload your progress photo. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+  const handleLogout = () => {
+    toast({
+      title: "Logged out successfully",
+      description: "Come back soon!",
+    });
+    navigate('/');
   };
-
-  useEffect(() => {
-    if (points >= 30 && !showReward) {
-      setShowReward(true);
-    }
-  }, [points, showReward]);
 
   const progressToReward = Math.min((points / 30) * 100, 100);
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast({
-        title: "Logged out successfully",
-        description: "Come back soon!",
-      });
-      navigate('/');
-    } catch (error) {
-      toast({
-        title: "Logout failed",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -335,7 +128,7 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
       )}
 
       <Tabs defaultValue="morning" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-8">
+        <TabsList className="grid w-full grid-cols-2 mb-8">
           <TabsTrigger value="morning" className="flex items-center gap-2">
             <Sun className="w-4 h-4" />
             Morning
@@ -343,10 +136,6 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
           <TabsTrigger value="night" className="flex items-center gap-2">
             <Moon className="w-4 h-4" />
             Night
-          </TabsTrigger>
-          <TabsTrigger value="progress" className="flex items-center gap-2">
-            <Camera className="w-4 h-4" />
-            Progress
           </TabsTrigger>
         </TabsList>
 
@@ -362,28 +151,20 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {morningLoading ? (
-                <div className="flex items-center gap-2"><Loader2 className="animate-spin" /> Loading...</div>
-              ) : morningError ? (
-                <div className="text-red-500">{morningError}</div>
-              ) : morningRoutine.length === 0 ? (
-                <div className="text-gray-500">No morning routine found.</div>
-              ) : (
-                morningRoutine.map((step) => (
-                  <div key={step.id} className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={morningCompleted.includes(step.id)}
-                        onCheckedChange={() => handleStepComplete(step.id)}
-                      />
-                      <div>
-                        <p className="font-medium">{step.step}</p>
-                        {step.time && <p className="text-sm text-gray-600">{step.time}</p>}
-                      </div>
+              {morningRoutine.map((step) => (
+                <div key={step.id} className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={morningCompleted.includes(step.id)}
+                      onCheckedChange={() => handleStepComplete(step.id)}
+                    />
+                    <div>
+                      <p className="font-medium">{step.step}</p>
+                      <p className="text-sm text-gray-600">{step.time}</p>
                     </div>
                   </div>
-                ))
-              )}
+                </div>
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
@@ -405,7 +186,7 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
                   <div className="flex items-center gap-3">
                     <Checkbox
                       checked={nightCompleted.includes(step.id)}
-                      onCheckedChange={() => handleStepComplete(step.id.toString(), true)}
+                      onCheckedChange={() => handleStepComplete(step.id, true)}
                     />
                     <div>
                       <p className="font-medium">{step.step}</p>
@@ -414,57 +195,6 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
                   </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="progress">
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Camera className="w-6 h-6 text-purple-500" />
-                Progress Tracking
-              </CardTitle>
-              <CardDescription>
-                Upload daily photos to track your skin's journey
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="border-2 border-dashed border-purple-300 rounded-lg p-8 text-center bg-purple-50">
-                <Camera className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Upload Today's Photo</h3>
-                <p className="text-gray-600 mb-4">Take a photo of your skin to track progress</p>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoUpload}
-                  className="hidden"
-                  id="photo-upload"
-                  disabled={loading}
-                />
-                <label htmlFor="photo-upload">
-                  <Button 
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Uploading...
-                      </>
-                    ) : (
-                      'Upload Photo'
-                    )}
-                  </Button>
-                </label>
-              </div>
-              
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg">
-                <h4 className="font-semibold mb-2">AI Analysis Coming Soon</h4>
-                <p className="text-sm text-gray-600">
-                  After 7 days of consistent photo uploads, our AI will analyze your progress and suggest routine adjustments.
-                </p>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
