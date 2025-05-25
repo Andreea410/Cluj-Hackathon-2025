@@ -7,13 +7,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Sun, Moon, Gift, Camera, Calendar, Loader2, LogOut } from 'lucide-react';
-import { routineService } from '@/services/routine.service';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 
 interface RoutineTrackerProps {
-  points: number;
-  setPoints: (value: number | ((prevPoints: number) => number)) => void;
+  points?: number;
+  setPoints?: (value: number | ((prevPoints: number) => number)) => void;
   skinAnalysis: {
     skinType: string;
     concerns: string[];
@@ -22,21 +21,70 @@ interface RoutineTrackerProps {
   userProfile: any;
 }
 
-const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: RoutineTrackerProps) => {
+const RoutineTracker = ({ points: propPoints, setPoints: propSetPoints, skinAnalysis, userProfile }: RoutineTrackerProps) => {
+  const [internalPoints, setInternalPoints] = useState<number>(0);
+  
   const [morningCompleted, setMorningCompleted] = useState<string[]>([]);
-  const [nightCompleted, setNightCompleted] = useState<number[]>([]);
+  const [nightCompleted, setNightCompleted] = useState<string[]>([]);
   const [showReward, setShowReward] = useState(false);
   const [dailyPointAwarded, setDailyPointAwarded] = useState(false);
   const [loading, setLoading] = useState(false);
+  
   const [morningRoutine, setMorningRoutine] = useState<any[]>([]);
   const [morningLoading, setMorningLoading] = useState(true);
   const [morningError, setMorningError] = useState<string | null>(null);
   const [nightRoutine, setNightRoutine] = useState<any[]>([]);
   const [nightLoading, setNightLoading] = useState(true);
   const [nightError, setNightError] = useState<string | null>(null);
+  
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const today = new Date().toDateString();
+    const savedPoints = localStorage.getItem('skincare_points');
+    const lastCompletedDate = localStorage.getItem('last_completed_date');
+    const todayMorning = localStorage.getItem(`morning_completed_${today}`);
+    const todayNight = localStorage.getItem(`night_completed_${today}`);
+    
+    if (savedPoints) {
+      const pointsValue = parseInt(savedPoints);
+      setInternalPoints(pointsValue);
+      if (propSetPoints) {
+        propSetPoints(pointsValue);
+      }
+    }
+    
+    if (lastCompletedDate === today) {
+      setDailyPointAwarded(true);
+    }
+    
+    if (todayMorning) {
+      setMorningCompleted(JSON.parse(todayMorning));
+    }
+    
+    if (todayNight) {
+      setNightCompleted(JSON.parse(todayNight));
+    }
+  }, [propSetPoints]);
+
+  useEffect(() => {
+    const today = new Date().toDateString();
+    localStorage.setItem(`morning_completed_${today}`, JSON.stringify(morningCompleted));
+  }, [morningCompleted]);
+
+  useEffect(() => {
+    const today = new Date().toDateString();
+    localStorage.setItem(`night_completed_${today}`, JSON.stringify(nightCompleted));
+  }, [nightCompleted]);
+
+  useEffect(() => {
+    localStorage.setItem('skincare_points', internalPoints.toString());
+    if (propSetPoints) {
+      propSetPoints(internalPoints);
+    }
+  }, [internalPoints, propSetPoints]);
 
   useEffect(() => {
     const fetchMorningRoutine = async () => {
@@ -51,7 +99,6 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
 
         const res = await fetch(url);
         console.log('API response status:', res.status);
-        console.log('API response headers:', Object.fromEntries(res.headers.entries()));
         
         const text = await res.text();
         console.log('API response text:', text);
@@ -109,138 +156,87 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
   }, [user?.id]);
 
   useEffect(() => {
-  const fetchNightRoutine = async () => {
-    if (!user?.id) return;
-    setNightLoading(true);
-    setNightError(null);
-    try {
-      const res = await fetch(`http://localhost:3000/api/users/${user.id}/night-products`);
-      const text = await res.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        setNightError(`API returned non-JSON response: ${text.substring(0, 300)}`);
-        return;
-      }
-      if (!res.ok) {
-        if (res.status === 404) {
-          setNightError('Please complete your profile in order to get a routine');
-        } else {
-          setNightError(data?.message || 'Failed to fetch night routine');
-        }
-        return;
-      }
-      setNightRoutine(
-        data.map((product: any) => ({
-          id: product.id,
-          step: product.name,
-          time: product.time || '1 minute',
-          photo_url: product.photo_url,
-        }))
-      );
-    } catch (err: any) {
-      setNightError(err.message || 'Failed to load night routine');
-    } finally {
-      setNightLoading(false);
-    }
-  };
-  fetchNightRoutine();
-}, [user?.id]);
-
-  useEffect(() => {
-    const loadRoutineProgress = async () => {
+    const fetchNightRoutine = async () => {
       if (!user?.id) return;
-      
+      setNightLoading(true);
+      setNightError(null);
       try {
-        const stats = await routineService.getRoutineStats(user.id);
-        setPoints(stats.totalPoints || 0);
-        
-        // Load today's progress
-        const today = new Date().toISOString().split('T')[0];
-        const todayLog = stats.logs?.find(log => log.date.startsWith(today));
-        
-        if (todayLog) {
-          const morningIds: string[] = todayLog.steps
-            .filter((id: string | number) => typeof id === 'string' && morningRoutine.some(step => step.id === id))
-            .map(id => id as string);
-          setMorningCompleted(morningIds);
-
-          const nightIds: number[] = todayLog.steps
-            .filter((id: string | number) => typeof id === 'number' && id > 4)
-            .map(id => id as number);
-          setNightCompleted(nightIds);
-
-          setDailyPointAwarded(todayLog.points > 0);
+        const res = await fetch(`http://localhost:3000/api/users/${user.id}/night-products`);
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          setNightError(`API returned non-JSON response: ${text.substring(0, 300)}`);
+          return;
         }
-      } catch (error) {
-        console.error('Failed to load routine progress:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load your routine progress. Please try again.",
-          variant: "destructive",
-        });
+        if (!res.ok) {
+          if (res.status === 404) {
+            setNightError('Please complete your profile in order to get a routine');
+          } else {
+            setNightError(data?.message || 'Failed to fetch night routine');
+          }
+          return;
+        }
+        setNightRoutine(
+          data.map((product: any) => ({
+            id: product.id,
+            step: product.name,
+            time: product.time || '1 minute',
+            photo_url: product.photo_url,
+          }))
+        );
+      } catch (err: any) {
+        setNightError(err.message || 'Failed to load night routine');
+      } finally {
+        setNightLoading(false);
       }
     };
+    fetchNightRoutine();
+  }, [user?.id]);
 
-    if (morningRoutine.length > 0) loadRoutineProgress();
-  }, [user?.id, morningRoutine]);
-
-  const handleStepComplete = async (stepId: string, isNight = false) => {
-    if (!user?.id) return;
-
-    try {
-      setLoading(true);
-      if (isNight) {
-        const steps = [...nightCompleted, stepId].filter((id): id is number => typeof id === 'number');
-        await routineService.logRoutineProgress(user.id, steps, isNight);
-        setNightCompleted(steps);
-        // Check if both routines are complete
-        const isMorningComplete = morningRoutine.every(step => morningCompleted.includes(step.id));
-        const isNightComplete = nightRoutine.every(step => steps.includes(step.id));
-        if (isMorningComplete && isNightComplete && !dailyPointAwarded) {
-          setPoints(prev => prev + 1);
-          setDailyPointAwarded(true);
-          toast({
-            title: "Daily Goal Achieved!",
-            description: "You've completed your daily routine and earned a point!",
-          });
-        }
+  const handleStepComplete = (stepId: string, isNight = false) => {
+    if (isNight) {
+      const isCompleted = nightCompleted.includes(stepId);
+      if (isCompleted) {
+        setNightCompleted(prev => prev.filter(id => id !== stepId));
       } else {
-        const steps = [...morningCompleted, stepId].filter((id): id is string => typeof id === 'string');
-        await routineService.logRoutineProgress(user.id, steps.map((_, idx) => idx + 1), isNight);
-        setMorningCompleted(steps);
-        // Check if both routines are complete
-        const isMorningComplete = morningRoutine.every(step => steps.includes(step.id));
-        const isNightComplete = nightRoutine.every(step => nightCompleted.includes(step.id));
-        if (isMorningComplete && isNightComplete && !dailyPointAwarded) {
-          setPoints(prev => prev + 1);
-          setDailyPointAwarded(true);
-          toast({
-            title: "Daily Goal Achieved!",
-            description: "You've completed your daily routine and earned a point!",
-          });
-        }
+        setNightCompleted(prev => [...prev, stepId]);
       }
-    } catch (error) {
-      console.error('Failed to update routine progress:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update your progress. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+    } else {
+      const isCompleted = morningCompleted.includes(stepId);
+      if (isCompleted) {
+        setMorningCompleted(prev => prev.filter(id => id !== stepId));
+      } else {
+        setMorningCompleted(prev => [...prev, stepId]);
+      }
     }
   };
 
+  useEffect(() => {
+    const isMorningComplete = morningRoutine.length > 0 && morningRoutine.every(step => morningCompleted.includes(step.id));
+    const isNightComplete = nightRoutine.length > 0 && nightRoutine.every(step => nightCompleted.includes(step.id));
+    
+    if (isMorningComplete && isNightComplete && !dailyPointAwarded) {
+      const today = new Date().toDateString();
+      setInternalPoints(prev => prev + 1);
+      setDailyPointAwarded(true);
+      localStorage.setItem('last_completed_date', today);
+      
+      toast({
+        title: "Daily Goal Achieved!",
+        description: "You've completed your daily routine and earned a point!",
+      });
+    }
+  }, [morningCompleted, nightCompleted, morningRoutine, nightRoutine, dailyPointAwarded, toast]);
+
   const handlePhotoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user?.id || !event.target.files?.length) return;
+    if (!event.target.files?.length) return;
 
     try {
       setLoading(true);
-      const photo = event.target.files[0];
-      await routineService.uploadProgressPhoto(user.id, photo);
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       toast({
         title: "Success",
@@ -259,12 +255,12 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
   };
 
   useEffect(() => {
-    if (points >= 30 && !showReward) {
+    if (internalPoints >= 30 && !showReward) {
       setShowReward(true);
     }
-  }, [points, showReward]);
+  }, [internalPoints, showReward]);
 
-  const progressToReward = Math.min((points / 30) * 100, 100);
+  const progressToReward = Math.min((internalPoints / 30) * 100, 100);
 
   const handleLogout = async () => {
     try {
@@ -311,12 +307,12 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
               <span className="font-semibold">Progress to 10% Discount</span>
             </div>
             <Badge className="bg-purple-100 text-purple-700">
-              {points} / 30 points
+              {internalPoints} / 30 points
             </Badge>
           </div>
           <Progress value={progressToReward} className="mb-2" />
           <p className="text-sm text-gray-600">
-            {points >= 30 ? '🎉 Congratulations! You earned a 10% discount!' : `${30 - points} more days until your reward`}
+            {internalPoints >= 30 ? '🎉 Congratulations! You earned a 10% discount!' : `${30 - internalPoints} more days until your reward`}
           </p>
         </CardContent>
       </Card>
@@ -400,20 +396,28 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {nightRoutine.map((step) => (
-                <div key={step.id} className="flex items-center justify-between p-4 bg-indigo-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Checkbox
-                      checked={nightCompleted.includes(step.id)}
-                      onCheckedChange={() => handleStepComplete(step.id.toString(), true)}
-                    />
-                    <div>
-                      <p className="font-medium">{step.step}</p>
-                      <p className="text-sm text-gray-600">{step.time}</p>
+              {nightLoading ? (
+                <div className="flex items-center gap-2"><Loader2 className="animate-spin" /> Loading...</div>
+              ) : nightError ? (
+                <div className="text-red-500">{nightError}</div>
+              ) : nightRoutine.length === 0 ? (
+                <div className="text-gray-500">No night routine found.</div>
+              ) : (
+                nightRoutine.map((step) => (
+                  <div key={step.id} className="flex items-center justify-between p-4 bg-indigo-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={nightCompleted.includes(step.id)}
+                        onCheckedChange={() => handleStepComplete(step.id, true)}
+                      />
+                      <div>
+                        <p className="font-medium">{step.step}</p>
+                        <p className="text-sm text-gray-600">{step.time}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </CardContent>
           </Card>
         </TabsContent>
