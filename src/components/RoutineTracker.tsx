@@ -31,16 +31,12 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
   const [morningRoutine, setMorningRoutine] = useState<any[]>([]);
   const [morningLoading, setMorningLoading] = useState(true);
   const [morningError, setMorningError] = useState<string | null>(null);
+  const [nightRoutine, setNightRoutine] = useState<any[]>([]);
+  const [nightLoading, setNightLoading] = useState(true);
+  const [nightError, setNightError] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  const nightRoutine = [
-    { id: 5, step: 'Gentle Cleanser', time: '30 seconds' },
-    { id: 6, step: 'Salicylic Acid Treatment', time: '1 minute' },
-    { id: 7, step: 'Hydrating Serum', time: '1 minute' },
-    { id: 8, step: 'Moisturizer', time: '30 seconds' }
-  ];
 
   useEffect(() => {
     const fetchMorningRoutine = async () => {
@@ -111,6 +107,46 @@ const RoutineTracker = ({ points, setPoints, skinAnalysis, userProfile }: Routin
     };
     fetchMorningRoutine();
   }, [user?.id]);
+
+  useEffect(() => {
+  const fetchNightRoutine = async () => {
+    if (!user?.id) return;
+    setNightLoading(true);
+    setNightError(null);
+    try {
+      const res = await fetch(`http://localhost:3000/api/users/${user.id}/night-products`);
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        setNightError(`API returned non-JSON response: ${text.substring(0, 300)}`);
+        return;
+      }
+      if (!res.ok) {
+        if (res.status === 404) {
+          setNightError('Please complete your profile in order to get a routine');
+        } else {
+          setNightError(data?.message || 'Failed to fetch night routine');
+        }
+        return;
+      }
+      setNightRoutine(
+        data.map((product: any) => ({
+          id: product.id,
+          step: product.name,
+          time: product.time || '1 minute',
+          photo_url: product.photo_url,
+        }))
+      );
+    } catch (err: any) {
+      setNightError(err.message || 'Failed to load night routine');
+    } finally {
+      setNightLoading(false);
+    }
+  };
+  fetchNightRoutine();
+}, [user?.id]);
 
   useEffect(() => {
     const loadRoutineProgress = async () => {

@@ -64,33 +64,42 @@ let UserController = class UserController {
                 console.log('[STEP 4.2] No routines found in user_routines table for user:', userId);
                 throw new common_1.HttpException('Please complete your profile in order to get a routine', common_1.HttpStatus.NOT_FOUND);
             }
-            console.log('[STEP 5] Getting user routine template details...');
-            const { data: userRoutine, error: userRoutineError } = await this.supabase
+            console.log('[STEP 5] Getting all user routine templates details...');
+            const { data: allUserRoutines, error: userRoutineError } = await this.supabase
                 .from('user_routines')
                 .select('id, routine_template_id, routine_templates (id, name, description)')
-                .eq('user_id', userId)
-                .single();
-            console.log('[STEP 5.1] userRoutine query result:', { userRoutine, userRoutineError });
+                .eq('user_id', userId);
+            console.log('[STEP 5.1] allUserRoutines query result:', { allUserRoutines, userRoutineError });
             if (userRoutineError) {
-                console.error('[ERROR] Error fetching user routine:', userRoutineError);
-                throw new common_1.HttpException('Failed to fetch user routine', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+                console.error('[ERROR] Error fetching user routines:', userRoutineError);
+                throw new common_1.HttpException('Failed to fetch user routines', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
             }
-            if (!userRoutine) {
-                console.log('[STEP 5.2] No routine found for user:', userId);
+            if (!allUserRoutines || allUserRoutines.length === 0) {
+                console.log('[STEP 5.2] No routines found for user:', userId);
                 throw new common_1.HttpException('Please complete your profile in order to get a routine', common_1.HttpStatus.NOT_FOUND);
             }
-            console.log('[STEP 6] Getting products for template:', userRoutine.routine_template_id);
+            let morningRoutine = allUserRoutines.find(r => {
+                let template = r.routine_templates;
+                if (Array.isArray(template))
+                    template = template.length > 0 ? template[0] : undefined;
+                return template && typeof template === 'object' && typeof template.name === 'string' && template.name.toLowerCase().startsWith('morning routine');
+            });
+            if (!morningRoutine) {
+                console.log('[STEP 5.3] User does not have a morning routine template');
+                throw new common_1.HttpException('No morning routine assigned to user', common_1.HttpStatus.NOT_FOUND);
+            }
+            console.log('[STEP 6] Getting products for morning routine template:', morningRoutine.routine_template_id);
             const { data: products, error: productsError } = await this.supabase
                 .from('routine_template_products')
                 .select('id, routine_template_id, product_id, products (id, name, photo_url)')
-                .eq('routine_template_id', userRoutine.routine_template_id);
+                .eq('routine_template_id', morningRoutine.routine_template_id);
             console.log('[STEP 6.1] Raw products response:', products);
             if (productsError) {
                 console.error('[ERROR] Error fetching products:', productsError);
                 throw new common_1.HttpException('Failed to fetch products', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
             }
             if (!products || products.length === 0) {
-                console.log('[STEP 6.2] No products found for routine template:', userRoutine.routine_template_id);
+                console.log('[STEP 6.2] No products found for morning routine template:', morningRoutine.routine_template_id);
                 throw new common_1.HttpException('Please complete your profile in order to get a routine', common_1.HttpStatus.NOT_FOUND);
             }
             console.log('[STEP 7] Formatting products...');
@@ -103,6 +112,93 @@ let UserController = class UserController {
         }
         catch (err) {
             console.error('[ERROR] in getMorningRoutineProducts:', err);
+            if (err instanceof common_1.HttpException)
+                throw err;
+            throw new common_1.HttpException('Please complete your profile in order to get a routine', common_1.HttpStatus.NOT_FOUND);
+        }
+    }
+    async getNightRoutineProducts(userId, request) {
+        console.log('=== [START] getNightRoutineProducts ===');
+        console.log('[STEP 1] Received request for user ID:', userId);
+        console.log('[STEP 2] Timestamp:', new Date().toISOString());
+        try {
+            console.log('[STEP 3] Checking if user exists...');
+            const { data: user, error: userError } = await this.supabase
+                .from('users')
+                .select('id, email')
+                .eq('id', userId)
+                .single();
+            console.log('[STEP 3.1] User query result:', { user, userError });
+            if (userError) {
+                console.error('[ERROR] User not found:', userError);
+                throw new common_1.HttpException('User not found', common_1.HttpStatus.NOT_FOUND);
+            }
+            if (!user) {
+                console.log('[STEP 3.2] User not found in database');
+                throw new common_1.HttpException('User not found', common_1.HttpStatus.NOT_FOUND);
+            }
+            console.log('[STEP 4] Checking user_routines for user...');
+            const { data: userRoutines, error: userRoutinesError } = await this.supabase
+                .from('user_routines')
+                .select('id, user_id, routine_template_id')
+                .eq('user_id', userId);
+            console.log('[STEP 4.1] user_routines query result:', { userRoutines, userRoutinesError });
+            if (userRoutinesError) {
+                console.error('[ERROR] Error checking user_routines:', userRoutinesError);
+                throw new common_1.HttpException('Failed to check user routines', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            if (!userRoutines || userRoutines.length === 0) {
+                console.log('[STEP 4.2] No routines found in user_routines table for user:', userId);
+                throw new common_1.HttpException('Please complete your profile in order to get a routine', common_1.HttpStatus.NOT_FOUND);
+            }
+            console.log('[STEP 5] Getting all user routine templates details...');
+            const { data: allUserRoutines, error: userRoutineError } = await this.supabase
+                .from('user_routines')
+                .select('id, routine_template_id, routine_templates (id, name, description)')
+                .eq('user_id', userId);
+            console.log('[STEP 5.1] allUserRoutines query result:', { allUserRoutines, userRoutineError });
+            if (userRoutineError) {
+                console.error('[ERROR] Error fetching user routines:', userRoutineError);
+                throw new common_1.HttpException('Failed to fetch user routines', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            if (!allUserRoutines || allUserRoutines.length === 0) {
+                console.log('[STEP 5.2] No routines found for user:', userId);
+                throw new common_1.HttpException('Please complete your profile in order to get a routine', common_1.HttpStatus.NOT_FOUND);
+            }
+            let nightRoutine = allUserRoutines.find(r => {
+                let template = r.routine_templates;
+                if (Array.isArray(template))
+                    template = template.length > 0 ? template[0] : undefined;
+                return template && typeof template === 'object' && typeof template.name === 'string' && template.name.toLowerCase().startsWith('night routine');
+            });
+            if (!nightRoutine) {
+                console.log('[STEP 5.3] User does not have a night routine template');
+                throw new common_1.HttpException('No night routine assigned to user', common_1.HttpStatus.NOT_FOUND);
+            }
+            console.log('[STEP 6] Getting products for night routine template:', nightRoutine.routine_template_id);
+            const { data: products, error: productsError } = await this.supabase
+                .from('routine_template_products')
+                .select('id, routine_template_id, product_id, products (id, name, photo_url)')
+                .eq('routine_template_id', nightRoutine.routine_template_id);
+            console.log('[STEP 6.1] Raw products response:', products);
+            if (productsError) {
+                console.error('[ERROR] Error fetching products:', productsError);
+                throw new common_1.HttpException('Failed to fetch products', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            if (!products || products.length === 0) {
+                console.log('[STEP 6.2] No products found for night routine template:', nightRoutine.routine_template_id);
+                throw new common_1.HttpException('Please complete your profile in order to get a routine', common_1.HttpStatus.NOT_FOUND);
+            }
+            console.log('[STEP 7] Formatting products...');
+            const formattedProducts = products
+                .map(item => Array.isArray(item.products) ? item.products[0] : item.products)
+                .filter(Boolean);
+            console.log('[STEP 7.1] Formatted products:', formattedProducts);
+            console.log('=== [END] getNightRoutineProducts ===');
+            return formattedProducts;
+        }
+        catch (err) {
+            console.error('[ERROR] in getNightRoutineProducts:', err);
             if (err instanceof common_1.HttpException)
                 throw err;
             throw new common_1.HttpException('Please complete your profile in order to get a routine', common_1.HttpStatus.NOT_FOUND);
@@ -186,6 +282,14 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], UserController.prototype, "getMorningRoutineProducts", null);
+__decorate([
+    (0, common_1.Get)(':id/night-products'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "getNightRoutineProducts", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),

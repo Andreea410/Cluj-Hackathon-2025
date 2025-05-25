@@ -17,6 +17,11 @@ export declare class UserController {
         name: any;
         photo_url: any;
     }[]>;
+    getNightRoutineProducts(userId: string, request: Request): Promise<{
+        id: any;
+        name: any;
+        photo_url: any;
+    }[]>;
     getUser(id: string, includeRole?: boolean): Promise<User>;
     getAllUsers(roleId?: string, includeRoles?: boolean): Promise<User[]>;
     updateUser(id: string, user: Partial<User>): Promise<User>;
