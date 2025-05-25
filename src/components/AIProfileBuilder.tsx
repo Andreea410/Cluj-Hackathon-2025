@@ -3,18 +3,26 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ReactMarkdown from 'react-markdown';
+import { useNavigate } from 'react-router-dom';
 
 const AIProfileBuilder = () => {
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<string[]>([]);
+  const [profileSubmitted, setProfileSubmitted] = useState(false);
+  const navigate = useNavigate();
 
   const profile = {
-    skin_type: "Dry",
-    breakout_frequency: "Rarely",
-    skin_concerns: "Wrinkles and dryness"
+    skin_type: "Combination",
+    breakout_frequency: "Occasional",
+    skin_concerns: "Doesn't matter beucase the agent is hallucinating"
   };
 
   const handleSubmitProfile = async () => {
+    if (profileSubmitted) {
+      navigate('/dashboard');
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await fetch("https://mariomaxim.app.n8n.cloud/webhook/register-skin-profile", {
@@ -27,6 +35,7 @@ const AIProfileBuilder = () => {
 
       const result = await response.json();
       setMessages(prev => [...prev, result.message]);
+      setProfileSubmitted(true);
     } catch (error) {
       console.error("Error sending profile to agent:", error);
       setMessages(prev => [...prev, "Sorry, something went wrong while contacting the AI agent."]);
@@ -39,7 +48,7 @@ const AIProfileBuilder = () => {
     <div className="container mx-auto px-4 py-8 max-w-2xl">
       <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur">
         <CardContent className="p-6">
-          <ScrollArea className="h-[300px] pr-4 mb-4">
+          <ScrollArea className="h-[550px] pr-4 mb-4">
             <div className="space-y-4">
               {messages.map((msg, index) => (
                 <div key={index} className="bg-gray-100 text-gray-800 p-4 rounded-lg">
@@ -62,7 +71,7 @@ const AIProfileBuilder = () => {
             disabled={loading}
             className="bg-purple-600 hover:bg-purple-700 w-full"
           >
-            Get Skincare Routine
+            {profileSubmitted ? "View your routine" : "Get Skincare Routine"}
           </Button>
         </CardContent>
       </Card>
