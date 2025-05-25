@@ -75,7 +75,7 @@ const AuthPage = () => {
       });
       toast({
         title: "Account created!",
-        description: "Please check your email to verify your account.",
+        description: "You've successfully registered.",
       });
     } catch (error: any) {
       toast({
