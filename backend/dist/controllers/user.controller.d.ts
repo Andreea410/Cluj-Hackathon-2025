@@ -6,9 +6,9 @@ export declare class UserController {
     private readonly userService;
     private readonly supabase;
     constructor(userService: UserService, supabase: SupabaseClient);
-    createUser(user: Partial<User> & {
-        password: string;
-    }): Promise<User>;
+    ping(): {
+        message: string;
+    };
     testRoute(): {
         message: string;
     };
@@ -16,7 +16,11 @@ export declare class UserController {
         id: any;
         name: any;
         photo_url: any;
-        time: any;
+    }[]>;
+    getNightRoutineProducts(userId: string, request: Request): Promise<{
+        id: any;
+        name: any;
+        photo_url: any;
     }[]>;
     getUser(id: string, includeRole?: boolean): Promise<User>;
     getAllUsers(roleId?: string, includeRoles?: boolean): Promise<User[]>;
